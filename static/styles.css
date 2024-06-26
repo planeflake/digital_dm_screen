@@ -1,0 +1,172 @@
+/* Existing styles */
+
+body {
+    font-family: 'Times New Roman', serif;
+    background: #2c2f33;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #23272a;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    margin-top: 0;
+    font-size: 2.5em;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #000;
+}
+
+button {
+    padding: 15px 20px;
+    border: none;
+    border-radius: 5px;
+    background: #7289da;
+    color: #fff;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #5b6eae;
+}
+
+ul.menu {
+    list-style: none;
+    padding: 0;
+}
+
+ul.menu li {
+    margin: 10px 0;
+}
+
+ul.menu li a {
+    color: #7289da;
+    text-decoration: none;
+    font-size: 1.2em;
+    transition: color 0.3s;
+}
+
+ul.menu li a:hover {
+    color: #5b6eae;
+}
+
+.dashboard {
+    text-align: left;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+.dashboard p {
+    margin: 10px 0;
+}
+
+/* New styles for tabs */
+
+.tabs {
+    overflow: hidden;
+    border-bottom: 1px solid #ccc;
+}
+
+.tablink {
+    background-color: #23272a;
+    color: white;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+.tablink:hover {
+    background-color: #555;
+}
+
+.tablink.active {
+    background-color: #7289da;
+}
+
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+    background-color: #2c2f33;
+    color: white;
+    text-align: left;
+}
+
+.currency-tracker p {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #000;
+}
+
+/* DM Dashboard Player Card Styles */
+
+.player-cards {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.player-card {
+    background: #2c2f33;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    margin: 10px;
+    min-width: 300px;
+    text-align: left;
+    flex: 0 0 auto;
+}
+
+.player-card h4 {
+    margin-top: 0;
+}
+
+.player-card p {
+    margin: 5px 0;
+}

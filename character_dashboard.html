@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Character Dashboard</title>    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .character-details {
+            width: 100%;
+            max-width: 800px;
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .character-details h2 {
+            grid-column: span 6;
+            text-align: center;
+        }
+
+        .character-details div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .character-details label {
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .character-details span {
+            margin-top: 5px;
+        }
+
+        .spellbook {
+            width: 100%;
+            max-width: 800px;
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .spellbook h3 {
+            text-align: center;
+        }
+
+        .spellbook ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .spellbook ul li {
+            padding: 5px 0;
+        }
+
+        .spellbook ul li i {
+            margin-right: 5px;
+        }
+
+        .expand-button {
+            grid-column: span 6;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="character-details">
+            <h2>{{ character['name'] }}</h2>
+            <div><label><i class="fas fa-shield-alt"></i> Class:</label><span>{{ character['class'] }}</span></div>
+            <div><label><i class="fas fa-paw"></i> Race:</label><span>{{ character['race'] }}</span></div>
+            <div><label><i class="fas fa-level-up-alt"></i> Level:</label><span>{{ character['level'] }}</span></div>
+            <div><label><i class="fas fa-fist-raised"></i> STR:</label><span>{{ character['strength'] }}</span></div>
+            <div><label><i class="fas fa-running"></i> DEX:</label><span>{{ character['dexterity'] }}</span></div>
+            <div><label><i class="fas fa-heartbeat"></i> CON:</label><span>{{ character['constitution'] }}</span></div>
+            <div><label><i class="fas fa-brain"></i> INT:</label><span>{{ character['intelligence'] }}</span></div>
+            <div><label><i class="fas fa-eye"></i> WIS:</label><span>{{ character['wisdom'] }}</span></div>
+            <div><label><i class="fas fa-comments"></i> CHA:</label><span>{{ character['charisma'] }}</span></div>
+            <div><label><i class="fas fa-heart"></i> HP:</label><span>{{ character['hit_points'] }}</span></div>
+            <div><label><i class="fas fa-shield-alt"></i> AC:</label><span>{{ character['armor_class'] }}</span></div>
+            <div><label><i class="fas fa-tachometer-alt"></i> Speed:</label><span>{{ character['speed'] }}</span></div>
+            <div><label><i class="fas fa-balance-scale"></i> Alignment:</label><span>{{ character['alignment'] }}</span></div>
+            <div><label><i class="fas fa-book"></i> Background:</label><span>{{ character['background'] }}</span></div>
+            {% if character['class'] in ['Wizard', 'Sorcerer', 'Bard', 'Druid', 'Cleric', 'Warlock'] %}
+            <div class="expand-button" onclick="toggleSpellbook()">
+                <i class="fas fa-book-open"></i> Spellbook
+            </div>
+            {% endif %}
+        </div>
+
+        {% if character['class'] in ['Wizard', 'Sorcerer', 'Bard', 'Druid', 'Cleric', 'Warlock'] %}
+        <div id="spellbook" class="spellbook">
+            <h3>Spellbook</h3>
+            <ul>
+                {% for spell in spells %}
+                <li><i class="fas fa-magic"></i> {{ spell['name'] }} - Level {{ spell['level'] }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleSpellbook() {
+            var spellbook = document.getElementById('spellbook');
+            if (spellbook.style.display === 'none' || spellbook.style.display === '') {
+                spellbook.style.display = 'block';
+            } else {
+                spellbook.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

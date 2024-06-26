@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DM Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .character-summary {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-user-shield"></i> DM Dashboard</h1>
+        <div class="tabs">
+            <button class="tablink active" onclick="openTab(event, 'Core')"><i class="fas fa-info-circle"></i> Core</button>
+            <button class="tablink" onclick="openTab(event, 'Players')"><i class="fas fa-users"></i> Players</button>
+            <button class="tablink" onclick="openTab(event, 'Notes')"><i class="fas fa-sticky-note"></i> Notes</button>
+            <button class="tablink" onclick="openTab(event, 'Log')"><i class="fas fa-book"></i> Log</button>
+            <button class="tablink" onclick="openTab(event, 'Spells')"><i class="fas fa-magic"></i> Spells</button>
+        </div>
+
+        <div id="Core" class="tabcontent" style="display: block;">
+            <!-- Core content here -->
+        </div>
+
+        <div id="Players" class="tabcontent" style="display: none;">
+            <h3>Players</h3>
+            <div class="player-characters">
+                {% for player, characters in players_characters.items() %}
+                <h4>{{ player }}</h4>
+                {% for character in characters %}
+                <div class="character-summary">
+                    <h3>{{ character.name }} - {{ character.class }} (Level {{ character.level }})</h3>
+                    <p>Strength: {{ character.strength }} ({{ character.strength|modifier }})</p>
+                    <p>Dexterity: {{ character.dexterity }} ({{ character.dexterity|modifier }})</p>
+                    <p>Constitution: {{ character.constitution }} ({{ character.constitution|modifier }})</p>
+                    <p>Intelligence: {{ character.intelligence }} ({{ character.intelligence|modifier }})</p>
+                    <p>Wisdom: {{ character.wisdom }} ({{ character.wisdom|modifier }})</p>
+                    <p>Charisma: {{ character.charisma }} ({{ character.charisma|modifier }})</p>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="Notes" class="tabcontent" style="display: none;">
+            <!-- Notes content here -->
+        </div>
+
+        <div id="Log" class="tabcontent" style="display: none;">
+            <!-- Log content here -->
+        </div>
+
+        <div id="Spells" class="tabcontent" style="display: none;">
+            <h3>Spells</h3>
+            <div class="spell-buttons">
+                <form action="{{ url_for('spells') }}" method="post">
+                    <button type="submit" name="school" value="Abjuration" style="background-color: #FF6347;">Abjuration</button>
+                    <button type="submit" name="school" value="Conjuration" style="background-color: #FFA500;">Conjuration</button>
+                    <button type="submit" name="school" value="Divination" style="background-color: #FFD700;">Divination</button>
+                    <button type="submit" name="school" value="Enchantment" style="background-color: #ADFF2F;">Enchantment</button>
+                    <button type="submit" name="school" value="Evocation" style="background-color: #32CD32;">Evocation</button>
+                    <button type="submit" name="school" value="Illusion" style="background-color: #40E0D0;">Illusion</button>
+                    <button type="submit" name="school" value="Necromancy" style="background-color: #1E90FF;">Necromancy</button>
+                    <button type="submit" name="school" value="Transmutation" style="background-color: #9370DB;">Transmutation</button>
+                </form>
+            </div>
+            <form action="{{ url_for('spells') }}" method="post">
+                <label for="spellSearch">Search Spells:</label>
+                <input type="text" id="spellSearch" name="name">
+                <button type="submit" name="search">Search</button>
+            </form>
+            <div id="spellResults">
+                <ul>
+                    {% for spell in spells %}
+                    <li>{{ spell.name }} - Level {{ spell.level }} - {{ spell.school }}
+                        <button onclick="showSpellDetails('{{ spell.name }}')">Show</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <script>
+            function openTab(evt, tabName) {
+                var i, tabcontent, tablinks;
+                tabcontent = document.getElementsByClassName("tabcontent");
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = "none";
+                }
+                tablinks = document.getElementsByClassName("tablink");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(" active", "");
+                }
+                document.getElementById(tabName).style.display = "block";
+                evt.currentTarget.className += " active";
+            }
+
+            function showSpellDetails(spellName) {
+                fetch(`/spells/${spellName}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        var newWindow = window.open();
+                        newWindow.document.write(html);
+                    });
+            }
+        </script>
+    </div>
+</body>
+</html>

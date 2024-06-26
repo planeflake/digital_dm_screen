@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Character Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .character-details {
+            width: 100%;
+            max-width: 800px;
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .character-details h2 {
+            text-align: center;
+        }
+
+        .character-details div {
+            margin-bottom: 10px;
+        }
+
+        .character-details label {
+            font-weight: bold;
+        }
+
+        .character-details span {
+            margin-left: 10px;
+        }
+
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .stat-box {
+            width: 30%;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .stat-bonus {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .skills {
+            margin-top: 20px;
+        }
+
+        .skills h3 {
+            text-align: center;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .skill-box {
+            width: 45%;
+            margin-bottom: 10px;
+        }
+
+        .panel {
+            position: fixed;
+            background-color: #f1f1f1;
+            width: 100%;
+            height: 50%;
+            transition: 0.3s;
+            overflow-y: auto;
+            z-index: 2;
+            border: 2px solid #d4af37;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .panel-bottom {
+            bottom: -50%;
+        }
+
+        .panel-right {
+            right: -100%;
+            width: 50%;
+            height: 100%;
+        }
+
+        .panel-left {
+            left: -100%;
+            width: 50%;
+            height: 100%;
+        }
+
+        .panel.open {
+            bottom: 0;
+            right: 0;
+            left: 0;
+        }
+
+        .toggle-button {
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .toggle-button i {
+            font-size: 24px;
+        }
+
+        .close-button {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .close-button i {
+            font-size: 24px;
+        }
+
+        .spellbook-content {
+            padding: 20px;
+            font-family: 'Cursive', sans-serif;
+            background-color: #fff8dc;
+            box-shadow: inset 0 0 10px #d4af37;
+            position: relative;
+            top: -10px;
+            border-top: 10px solid transparent;
+            background-clip: padding-box;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px));
+        }
+
+        .spell {
+            margin-bottom: 20px;
+        }
+
+        .spell h4 {
+            margin: 0;
+            font-size: 18px;
+            color: #b22222;
+        }
+
+        .spell p {
+            margin: 5px 0;
+        }
+    </style>
+    <script>
+        function togglePanel(panelId) {
+            var panel = document.getElementById(panelId);
+            panel.classList.toggle("open");
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="character-details">
+            <h2><i class="fas fa-user"></i> {{ character['name'] }}</h2>
+            <div><label><i class="fas fa-graduation-cap"></i> Class:</label><span>{{ character['class'] }}</span></div>
+            <div><label><i class="fas fa-users"></i> Race:</label><span>{{ character['race'] }}</span></div>
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-bonus">{{ character['strength']|modifier }}</div>
+                    <label><i class="fas fa-dumbbell"></i> Strength:</label><span>{{ character['strength'] }}</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-bonus">{{ character['dexterity']|modifier }}</div>
+                    <label><i class="fas fa-running"></i> Dexterity:</label><span>{{ character['dexterity'] }}</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-bonus">{{ character['constitution']|modifier }}</div>
+                    <label><i class="fas fa-heartbeat"></i> Constitution:</label><span>{{ character['constitution'] }}</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-bonus">{{ character['intelligence']|modifier }}</div>
+                    <label><i class="fas fa-brain"></i> Intelligence:</label><span>{{ character['intelligence'] }}</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-bonus">{{ character['wisdom']|modifier }}</div>
+                    <label><i class="fas fa-eye"></i> Wisdom:</label><span>{{ character['wisdom'] }}</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-bonus">{{ character['charisma']|modifier }}</div>
+                    <label><i class="fas fa-theater-masks"></i> Charisma:</label><span>{{ character['charisma'] }}</span>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-box"><label><i class="fas fa-heart"></i> Hit Points:</label><span>{{ character['hit_points'] }}</span></div>
+                <div class="stat-box"><label><i class="fas fa-shield-alt"></i> Armor Class:</label><span>{{ character['armor_class'] }}</span></div>
+                <div class="stat-box"><label><i class="fas fa-shoe-prints"></i> Speed:</label><span>{{ character['speed'] }}</span></div>
+            </div>
+            <div><label><i class="fas fa-balance-scale"></i> Alignment:</label><span>{{ character['alignment'] }}</span></div>
+            <div><label><i class="fas fa-book-open"></i> Background:</label><span>{{ character['background'] }}</span></div>
+
+            <div class="skills">
+                <h3><i class="fas fa-book"></i> Skills</h3>
+                <div class="skill-list">
+                    {% for skill, value in skills.items() %}
+                    <div class="skill-box"><label>{{ skill }}:</label><span>{{ value }}</span></div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if character['class'] in ['Wizard', 'Sorcerer', 'Cleric', 'Druid'] %}
+            <div class="spellbook">
+                <h3 class="toggle-button" onclick="togglePanel('spellbook-panel')"><i class="fas fa-book"></i> Spellbook</h3>
+            </div>
+            {% endif %}
+
+            <div class="inventory">
+                <h3 class="toggle-button" onclick="togglePanel('inventory-panel')"><i class="fas fa-box"></i> Inventory</h3>
+            </div>
+
+            <div class="extra-details">
+                <h3 class="toggle-button" onclick="togglePanel('extra-details-panel')"><i class="fas fa-info-circle"></i> Extra Details</h3>
+            </div>
+        </div>
+
+        <div id="spellbook-panel" class="panel panel-bottom">
+            <span class="close-button" onclick="togglePanel('spellbook-panel')"><i class="fas fa-times"></i></span>
+            <div class="spellbook-content">
+                <h3>Spellbook</h3>
+                <div class="spell">
+                    <h4><i class="fas fa-magic"></i> Fireball</h4>
+                    <p><strong>Level:</strong> 3</p>
+                    <p><strong>Casting Time:</strong> 1 action</p>
+                    <p><strong>Range:</strong> 150 feet</p>
+                    <p><strong>Components:</strong> V, S, M (a tiny ball of bat guano and sulfur)</p>
+                    <p><strong>Duration:</strong> Instantaneous</p>
+                    <p><strong>Description:</strong> A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.</p>
+                </div>
+                <div class="spell">
+                    <h4><i class="fas fa-magic"></i> Magic Missile</h4>
+                    <p><strong>Level:</strong> 1</p>
+                    <p><strong>Casting Time:</strong> 1 action</p>
+                    <p><strong>Range:</strong> 120 feet</p>
+                    <p><strong>Components:</strong> V, S</p>
+                    <p><strong>Duration:</strong> Instantaneous</p>
+                    <p><strong>Description:</strong> You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventory-panel" class="panel panel-right">
+            <span class="close-button" onclick="togglePanel('inventory-panel')"><i class="fas fa-times"></i></span>
+            <div class="spellbook-content">
+                <h3>Inventory</h3>
+                <div class="item">
+                    <h4><i class="fas fa-sword"></i> Longsword</h4>
+                    <p><strong>Type:</strong> Weapon</p>
+                    <p><strong>Damage:</strong> 1d8 slashing</p>
+                    <p><strong>Weight:</strong> 3 lbs</p>
+                    <p><strong>Description:</strong> A versatile weapon that can be wielded with one or two hands.</p>
+                </div>
+                <div class="item">
+                    <h4><i class="fas fa-shield-alt"></i> Shield</h4>
+                    <p><strong>Type:</strong> Armor</p>
+                    <p><strong>AC Bonus:</strong> +2</p>
+                    <p><strong>Weight:</strong> 6 lbs</p>
+                    <p><strong>Description:</strong> A large shield that provides additional protection in combat.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="extra-details-panel" class="panel panel-left">
+            <span class="close-button" onclick="togglePanel('extra-details-panel')"><i class="fas fa-times"></i></span>
+            <div class="spellbook-content">
+                <h3>Extra Details</h3>
+                <div class="detail">
+                    <h4><i class="fas fa-bullseye"></i> Darkvision</h4>
+                    <p><strong>Range:</strong> 60 feet</p>
+                    <p><strong>Description:</strong> You can see in darkness (shades of gray) up to 60 feet.</p>
+                </div>
+                <div class="detail">
+                    <h4><i class="fas fa-feather"></i> Feather Fall</h4>
+                    <p><strong>Casting Time:</strong> 1 reaction</p>
+                    <p><strong>Range:</strong> 60 feet</p>
+                    <p><strong>Description:</strong> Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

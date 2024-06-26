@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ spell.name }} Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .spell-details {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="spell-details">
+        <h1>{{ spell.name }}</h1>
+        <p><strong>Level:</strong> {{ spell.level }}</p>
+        <p><strong>School:</strong> {{ spell.school }}</p>
+        <p><strong>Casting Time:</strong> {{ spell.casting_time }}</p>
+        <p><strong>Source:</strong> {{ spell.source }}</p>
+        <p><strong>Area:</strong> {{ spell.area }}</p>
+        <p><strong>Components:</strong> {{ spell.components | join(', ') }}</p>
+        <p><strong>Entry:</strong> {{ spell.entry }}</p>
+        <p><strong>Misc Tag:</strong> {{ spell.misc_tag }}</p>
+        <p><strong>Range:</strong> {{ spell.range }}</p>
+        <p><strong>Condition:</strong> {{ spell.condition }}</p>
+        <button onclick="window.close()">Close</button>
+    </div>
+</body>
+</html>

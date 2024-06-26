@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Character</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .stats-container .stat {
+            flex: 1;
+            min-width: 60px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Create Character</h1>
+        <form action="{{ url_for('create_character') }}" method="post" class="form-container">
+            <input type="hidden" name="username" value="{{ request.args.get('username') }}">
+
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="class">Class:</label>
+                <select id="class" name="class" required>
+                    {% for class in classes %}
+                    <option value="{{ class }}">{{ class }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="race">Race:</label>
+                <select id="race" name="race" required>
+                    {% for race in races %}
+                    <option value="{{ race }}">{{ race }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="level">Level:</label>
+                <select id="level" name="level" required>
+                    {% for level in range(1, 21) %}
+                    <option value="{{ level }}">{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="stats-container">
+                <div class="stat">
+                    <label for="strength">Strength:</label>
+                    <input type="number" id="strength" name="strength" required min="1" max="20">
+                </div>
+                <div class="stat">
+                    <label for="dexterity">Dexterity:</label>
+                    <input type="number" id="dexterity" name="dexterity" required min="1" max="20">
+                </div>
+                <div class="stat">
+                    <label for="constitution">Constitution:</label>
+                    <input type="number" id="constitution" name="constitution" required min="1" max="20">
+                </div>
+                <div class="stat">
+                    <label for="intelligence">Intelligence:</label>
+                    <input type="number" id="intelligence" name="intelligence" required min="1" max="20">
+                </div>
+                <div class="stat">
+                    <label for="wisdom">Wisdom:</label>
+                    <input type="number" id="wisdom" name="wisdom" required min="1" max="20">
+                </div>
+                <div class="stat">
+                    <label for="charisma">Charisma:</label>
+                    <input type="number" id="charisma" name="charisma" required min="1" max="20">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="hit_points">Hit Points:</label>
+                <input type="number" id="hit_points" name="hit_points" required min="1">
+            </div>
+            <div class="form-group">
+                <label for="armor_class">Armor Class:</label>
+                <input type="number" id="armor_class" name="armor_class" required min="1">
+            </div>
+            <div class="form-group">
+                <label for="speed">Speed:</label>
+                <input type="number" id="speed" name="speed" required min="1">
+            </div>
+            <div class="form-group">
+                <label for="alignment">Alignment:</label>
+                <select id="alignment" name="alignment" required>
+                    {% for alignment in alignments %}
+                    <option value="{{ alignment }}">{{ alignment }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="background">Background:</label>
+                <select id="background" name="background" required>
+                    {% for background in backgrounds %}
+                    <option value="{{ background }}">{{ background }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Create Character</button>
+        </form>
+    </div>
+</body>
+
+</html>

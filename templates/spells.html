@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spells</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Spells</h1>
+        <form action="{{ url_for('spells') }}" method="post">
+            <label for="spellSearch">Search Spells:</label>
+            <input type="text" id="spellSearch" name="name">
+            <button type="submit" name="search">Search</button>
+        </form>
+        <div id="spellResults">
+            <ul>
+                {% for spell in spells %}
+                <li>{{ spell.name }} - Level {{ spell.level }} - {{ spell.school }}
+                    <button onclick="showSpellDetails('{{ spell.name }}')">Show</button>
+                    <button>Learn</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <script>
+        function showSpellDetails(spellName) {
+            fetch(`/spells/${spellName}`)
+                .then(response => response.text())
+                .then(html => {
+                    var newWindow = window.open();
+                    newWindow.document.write(html);
+                });
+        }
+    </script>
+</body>
+</html>
