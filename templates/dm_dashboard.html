@@ -1,116 +1,663 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>DM Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <style>
-        .character-summary {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px;
-            border-radius: 5px;
+.character-profile {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 400px;
+    height: 100%;
+    background-color: white;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+    transition: right 0.3s ease;
+}
+
+.character-profile.open {
+    right: 0;
+}
+
+.character-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+}
+
+.character-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    height: 150px; /* Adjust as needed */
+}
+
+.character-header img {
+    height: 100%;
+    width: 150px;
+    max-height: 200px; /* Ensure it matches the height of the character-header */
+    object-fit: cover;
+}
+
+.character-info {
+    margin-left: 20px;
+}
+
+.character-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.character-details p {
+    margin: 5px 0;
+}
+
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
         }
-    </style>
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #80deea;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .tabs button:hover {
+            background-color: #4dd0e1;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .initiative-tracker {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 220px;
+            background-color: #e0f7fa;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .initiative-tracker.active {
+            display: block;
+        }
+
+        .combat-tracker {
+            width: 100%;
+            background-color: #ffe0b2;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .combat-tracker h3 {
+            text-align: center;
+        }
+
+        .initiative-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .initiative-list li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            background-color: #ffffff;
+        }
+
+        .nav-buttons {
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            background-color: #80deea;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .nav-buttons button:hover {
+            background-color: #4dd0e1;
+        }
+
+        .player-dashboard {
+            width: 100%;
+            background-color: #e1bee7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .current-player-details {
+            width: 100%;
+            background-color: #ffccbc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .monster-search {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .monster-search input {
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        .monster-grid,
+        .character-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            background-color: #dcedc8;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .monster-box,
+        .character-box {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #ffffff;
+        }
+
+        .notifications {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 300px;
+        }
+
+        .notification {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            opacity: 0.9;
+        }
+
+        .health-loss {
+            background-color: #ef9a9a;
+        }
+
+        .health-gain {
+            background-color: #a5d6a7;
+        }
+
+        .fire-spell {
+            background-color: #ffcc80;
+        }
+
+        .water-spell {
+            background-color: #81d4fa;
+        }
+
+        .earth-spell {
+            background-color: #bcaaa4;
+        }
+
+        .air-spell {
+            background-color: #b3e5fc;
+        }
+
+        .condition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .condition-box {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #ffffff;
+        }
+
+        .condition-box i {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+</style>
 </head>
+
 <body>
     <div class="container">
-        <h1><i class="fas fa-user-shield"></i> DM Dashboard</h1>
+        <h1>DM Dashboard</h1>
         <div class="tabs">
-            <button class="tablink active" onclick="openTab(event, 'Core')"><i class="fas fa-info-circle"></i> Core</button>
-            <button class="tablink" onclick="openTab(event, 'Players')"><i class="fas fa-users"></i> Players</button>
-            <button class="tablink" onclick="openTab(event, 'Notes')"><i class="fas fa-sticky-note"></i> Notes</button>
-            <button class="tablink" onclick="openTab(event, 'Log')"><i class="fas fa-book"></i> Log</button>
-            <button class="tablink" onclick="openTab(event, 'Spells')"><i class="fas fa-magic"></i> Spells</button>
+            <button data-tab="combat">Combat</button>
+            <button data-tab="characters">Characters</button>
+            <button data-tab="monsters">Monsters</button>
+            <button data-tab="conditions">Conditions</button>
+            <button data-tab="main">Main</button>
         </div>
 
-        <div id="Core" class="tabcontent" style="display: block;">
-            <!-- Core content here -->
+        <div id="combat" class="tab-content">
+            <div class="combat-tracker">
+                <h3>Combat Tracker</h3>
+                <div class="nav-buttons">
+                    <button id="toggle-initiative">Toggle Initiative Tracker</button>
+                    <button id="previous-turn">Previous Turn</button>
+                    <button id="next-turn">Next Turn</button>
+                </div>
+                <div id="current-player-details" class="current-player-details">
+                    <!-- Current player details will be populated by JavaScript -->
+                </div>
+            </div>
+            <div id="player-dashboard" class="player-dashboard">
+                <!-- Player dashboard will be populated by JavaScript -->
+            </div>
+            <div class="monster-search">
+                <input type="text" id="monster-search" placeholder="Search Monsters...">
+            </div>
+            <div id="monster-grid" class="monster-grid">
+                <!-- Monster grid will be populated by JavaScript -->
+            </div>
         </div>
 
-        <div id="Players" class="tabcontent" style="display: none;">
-            <h3>Players</h3>
-            <div class="player-characters">
-                {% for player, characters in players_characters.items() %}
-                <h4>{{ player }}</h4>
+        <div id="characters" class="tab-content">
+            <h3>Characters</h3>
+            <div id="character-grid" class="character-grid">
                 {% for character in characters %}
-                <div class="character-summary">
-                    <h3>{{ character.name }} - {{ character.class }} (Level {{ character.level }})</h3>
-                    <p>Strength: {{ character.strength }} ({{ character.strength|modifier }})</p>
-                    <p>Dexterity: {{ character.dexterity }} ({{ character.dexterity|modifier }})</p>
-                    <p>Constitution: {{ character.constitution }} ({{ character.constitution|modifier }})</p>
-                    <p>Intelligence: {{ character.intelligence }} ({{ character.intelligence|modifier }})</p>
-                    <p>Wisdom: {{ character.wisdom }} ({{ character.wisdom|modifier }})</p>
-                    <p>Charisma: {{ character.charisma }} ({{ character.charisma|modifier }})</p>
+                <div class="character-box character-item" data-index="{{ loop.index0 }}">
+                    <img src="{{ character.tokenUrl }}" alt="{{ character.name }}" width="50">
+                    <p>Name: {{ character.name }}</p>
+                    <p>Class: {{ character.class }}</p>
+                    <p>Race: {{ character.race }}</p>
+                    <p>Level: {{ character.level }}</p>
                 </div>
                 {% endfor %}
+            </div>
+        </div>
+        
+        
+
+        <div id="monsters" class="tab-content">
+            <h3>Monsters</h3>
+            <div class="monster-search">
+                <input type="text" id="monster-search-tab" placeholder="Search Monsters...">
+            </div>
+            <div id="monster-list" class="monster-grid">
+                {% for monster in monsters %}
+                <div class="monster-box">
+                    <img src="{{ monster.tokenUrl }}" alt="{{ monster.name }}" width="50">
+                    <p>Name: {{ monster.name }}</p>
+                    <p>AC: {{ monster.ac }}</p>
+                    <p>CR: {{ monster.cr }}</p>
+                    <p>Type: {{ monster.type }}</p>
+                </div>
                 {% endfor %}
             </div>
         </div>
-
-        <div id="Notes" class="tabcontent" style="display: none;">
-            <!-- Notes content here -->
-        </div>
-
-        <div id="Log" class="tabcontent" style="display: none;">
-            <!-- Log content here -->
-        </div>
-
-        <div id="Spells" class="tabcontent" style="display: none;">
-            <h3>Spells</h3>
-            <div class="spell-buttons">
-                <form action="{{ url_for('spells') }}" method="post">
-                    <button type="submit" name="school" value="Abjuration" style="background-color: #FF6347;">Abjuration</button>
-                    <button type="submit" name="school" value="Conjuration" style="background-color: #FFA500;">Conjuration</button>
-                    <button type="submit" name="school" value="Divination" style="background-color: #FFD700;">Divination</button>
-                    <button type="submit" name="school" value="Enchantment" style="background-color: #ADFF2F;">Enchantment</button>
-                    <button type="submit" name="school" value="Evocation" style="background-color: #32CD32;">Evocation</button>
-                    <button type="submit" name="school" value="Illusion" style="background-color: #40E0D0;">Illusion</button>
-                    <button type="submit" name="school" value="Necromancy" style="background-color: #1E90FF;">Necromancy</button>
-                    <button type="submit" name="school" value="Transmutation" style="background-color: #9370DB;">Transmutation</button>
-                </form>
-            </div>
-            <form action="{{ url_for('spells') }}" method="post">
-                <label for="spellSearch">Search Spells:</label>
-                <input type="text" id="spellSearch" name="name">
-                <button type="submit" name="search">Search</button>
-            </form>
-            <div id="spellResults">
-                <ul>
-                    {% for spell in spells %}
-                    <li>{{ spell.name }} - Level {{ spell.level }} - {{ spell.school }}
-                        <button onclick="showSpellDetails('{{ spell.name }}')">Show</button>
-                    </li>
-                    {% endfor %}
-                </ul>
+        <div id="conditions" class="tab-content">
+            <h3>Conditions</h3>
+            <div class="condition-grid">
+                {% for condition in conditions %}
+                <div class="condition-box">
+                    <i class="{{ condition.icon }}"></i>
+                    <p>{{ condition.name|capitalize }}</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
+        <div id="main" class="tab-content">
+            <h3>Main</h3>
+            <!-- Main content goes here -->
+        </div>
 
-        <script>
-            function openTab(evt, tabName) {
-                var i, tabcontent, tablinks;
-                tabcontent = document.getElementsByClassName("tabcontent");
-                for (i = 0; i < tabcontent.length; i++) {
-                    tabcontent[i].style.display = "none";
-                }
-                tablinks = document.getElementsByClassName("tablink");
-                for (i = 0; i < tablinks.length; i++) {
-                    tablinks[i].className = tablinks[i].className.replace(" active", "");
-                }
-                document.getElementById(tabName).style.display = "block";
-                evt.currentTarget.className += " active";
-            }
+        <div class="notifications" id="notifications">
+            <!-- Notifications will appear here -->
+        </div>
 
-            function showSpellDetails(spellName) {
-                fetch(`/spells/${spellName}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        var newWindow = window.open();
-                        newWindow.document.write(html);
-                    });
-            }
-        </script>
+        <div class="initiative-tracker" id="initiative-tracker">
+            <h3>Initiative</h3>
+            <ul class="initiative-list" id="initiative-list">
+                <!-- Initiative list will be populated by JavaScript -->
+            </ul>
+        </div>
     </div>
+    <div id="character-profile" class="character-profile">
+        <div class="character-content">
+            <button id="close-character-profile">&times;</button>
+            <div class="character-header">
+                <img id="character-image" src="" alt="Character Image">
+                <div class="character-info">
+                    <h3 id="character-name"></h3>
+                    <p><strong>Class:</strong> <span id="character-class"></span></p>
+                    <p><strong>Race:</strong> <span id="character-race"></span></p>
+                    <p><strong>Level:</strong> <span id="character-level"></span></p>
+                </div>
+            </div>
+            <div class="character-details">
+                <p><strong>Strength:</strong> <span id="character-strength"></span></p>
+                <p><strong>Dexterity:</strong> <span id="character-dexterity"></span></p>
+                <p><strong>Constitution:</strong> <span id="character-constitution"></span></p>
+                <p><strong>Intelligence:</strong> <span id="character-intelligence"></span></p>
+                <p><strong>Wisdom:</strong> <span id="character-wisdom"></span></p>
+                <p><strong>Charisma:</strong> <span id="character-charisma"></span></p>
+                <p><strong>Hit Points:</strong> <span id="character-hitpoints"></span></p>
+                <p><strong>Armor Class:</strong> <span id="character-armorclass"></span></p>
+                <p><strong>Speed:</strong> <span id="character-speed"></span></p>
+                <p><strong>Alignment:</strong> <span id="character-alignment"></span></p>
+                <p><strong>Background:</strong> <span id="character-background"></span></p>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io();
+            let currentTurnIndex = 0;
+            let initiativeTrackerVisible = false;
+
+            const players = [
+                { name: 'Player1', initiative: 15, status: 'active', image: 'https://i.imgur.com/ncSm7ZJ.png', hp: 30, ac: 15, spell: 'Fireball' },
+                { name: 'Player2', initiative: 18, status: 'active', image: 'https://i.pinimg.com/474x/7d/e4/34/7de4343875e264d593f26f1ca5adda29.jpg', hp: 25, ac: 13, spell: 'Heal' },
+                { name: 'Player3', initiative: 12, status: 'active', image: 'https://i.pinimg.com/236x/0b/4b/ee/0b4beeb6fea8a06b7cc9732fcd5f07fb.jpg', hp: 20, ac: 14, spell: 'Magic Missile' },
+                { name: 'Monster1', initiative: 20, status: 'active', image: 'https://i.pinimg.com/originals/5d/8d/85/5d8d85f31b532f806616abf992abfcfd.png', hp: 50, ac: 12 },
+            ];
+
+            const monsters = [
+                { name: 'Goblin', image: 'https://via.placeholder.com/100', hp: 10, ac: 12 },
+                { name: 'Orc', image: 'https://via.placeholder.com/100', hp: 30, ac: 13 },
+                { name: 'Dragon', image: 'https://i.pinimg.com/originals/5d/8d/85/5d8d85f31b532f806616abf992abfcfd.png', hp: 300, ac: 18 },
+            ];
+
+            function sortInitiative(players) {
+                return players.sort((a, b) => b.initiative - a.initiative);
+            }
+
+            function findNextTurnIndex(players, currentTurnIndex) {
+                return (currentTurnIndex + 1) % players.length;
+            }
+
+            function findPreviousTurnIndex(players, currentTurnIndex) {
+                return (currentTurnIndex - 1 + players.length) % players.length;
+            }
+
+            function renderInitiativeList(players, currentTurnIndex, nextTurnIndex) {
+                const list = document.getElementById('initiative-list');
+                list.innerHTML = '';
+
+                players.forEach((player, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `${player.name} (Initiative: ${player.initiative})`;
+                    if (index === currentTurnIndex) {
+                        li.style.backgroundColor = 'lightgreen';
+                    } else if (index === nextTurnIndex) {
+                        li.style.backgroundColor = 'lightblue';
+                    } else if (player.hp <= 0) {
+                        li.style.backgroundColor = 'lightcoral';
+                    }
+                    li.style.borderRadius = '10px';
+                    list.appendChild(li);
+                });
+            }
+
+            function renderPlayerDashboard(players, currentTurnIndex, nextTurnIndex) {
+                const dashboard = document.getElementById('player-dashboard');
+                dashboard.innerHTML = '';
+
+                players.forEach((player, index) => {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.innerHTML = `
+                        <img src="${player.image}" alt="${player.name}" width="50" style="border-radius: 50%;">
+                        ${player.name}
+                    `;
+                    if (index === currentTurnIndex) {
+                        playerDiv.style.backgroundColor = 'lightgreen';
+                    } else if (index === nextTurnIndex) {
+                        playerDiv.style.backgroundColor = 'lightblue';
+                    } else if (player.hp <= 0) {
+                        playerDiv.style.backgroundColor = 'lightcoral';
+                    }
+                    playerDiv.style.borderRadius = '10px';
+                    playerDiv.style.padding = '10px';
+                    playerDiv.style.marginBottom = '10px';
+                    dashboard.appendChild(playerDiv);
+                });
+            }
+
+            function renderCurrentPlayerDetails(player) {
+                const details = document.getElementById('current-player-details');
+                details.innerHTML = `
+                    <h3>${player.name}</h3>
+                    <p>HP: ${player.hp}</p>
+                    <p>AC: ${player.ac}</p>
+                    <p>Spell: ${player.spell}</p>
+                `;
+            }
+
+            function renderMonsterGrid(monsters) {
+                const grid = document.getElementById('monster-grid');
+                grid.innerHTML = '';
+
+                monsters.forEach(monster => {
+                    const monsterDiv = document.createElement('div');
+                    monsterDiv.className = 'monster-box';
+                    monsterDiv.innerHTML = `
+                        <img src="${monster.image}" alt="${monster.name}" width="50">
+                        <p>${monster.name}</p>
+                        <p>HP: ${monster.hp}</p>
+                        <p>AC: ${monster.ac}</p>
+                    `;
+                    monsterDiv.style.borderRadius = '10px';
+                    monsterDiv.style.padding = '10px';
+                    grid.appendChild(monsterDiv);
+                });
+            }
+
+            function showNotification(message, type) {
+                const notifications = document.getElementById('notifications');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.innerText = message;
+                notifications.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+
+            function updateCombatTracker(players, currentTurnIndex) {
+                const sortedPlayers = sortInitiative(players);
+                const nextTurnIndex = findNextTurnIndex(sortedPlayers, currentTurnIndex);
+
+                renderInitiativeList(sortedPlayers, currentTurnIndex, nextTurnIndex);
+                renderPlayerDashboard(sortedPlayers, currentTurnIndex, nextTurnIndex);
+                renderCurrentPlayerDetails(sortedPlayers[currentTurnIndex]);
+                renderMonsterGrid(monsters);
+            }
+
+            updateCombatTracker(players, currentTurnIndex);
+
+            // Navigation buttons functionality
+            document.getElementById('next-turn').addEventListener('click', function () {
+                currentTurnIndex = findNextTurnIndex(players, currentTurnIndex);
+                updateCombatTracker(players, currentTurnIndex);
+                socket.emit('next_turn', { currentTurnIndex });
+            });
+
+            document.getElementById('previous-turn').addEventListener('click', function () {
+                currentTurnIndex = findPreviousTurnIndex(players, currentTurnIndex);
+                updateCombatTracker(players, currentTurnIndex);
+                socket.emit('previous_turn', { currentTurnIndex });
+            });
+
+            socket.on('update_turn', function (data) {
+                currentTurnIndex = data.currentTurnIndex;
+                updateCombatTracker(players, currentTurnIndex);
+            });
+
+            // Toggle initiative tracker
+            document.getElementById('toggle-initiative').addEventListener('click', function () {
+                initiativeTrackerVisible = !initiativeTrackerVisible;
+                const initiativeTracker = document.getElementById('initiative-tracker');
+                if (initiativeTrackerVisible) {
+                    initiativeTracker.classList.add('active');
+                } else {
+                    initiativeTracker.classList.remove('active');
+                }
+            });
+
+            // Example notifications
+            showNotification('Player1 loses 5 HP', 'health-loss');
+            showNotification('Player2 casts Fireball', 'fire-spell');
+
+            // Monster search functionality
+            document.getElementById('monster-search').addEventListener('input', function (event) {
+                const searchQuery = event.target.value.toLowerCase();
+                const filteredMonsters = monsters.filter(monster =>
+                    monster.name.toLowerCase().includes(searchQuery)
+                );
+                renderMonsterGrid(filteredMonsters);
+            });
+
+            // Tab navigation functionality
+            const tabs = document.querySelectorAll('.tabs button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    tabs.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+                });
+            });
+
+            // Set the initial active tab
+            document.querySelector('.tabs button[data-tab="combat"]').classList.add('active');
+            document.getElementById('combat').classList.add('active');
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+    // Function to open the character profile
+    function openCharacterProfile(character) {
+        document.getElementById('character-image').src = character.fluffUrl;
+        document.getElementById('character-name').innerText = character.name;
+        document.getElementById('character-class').innerText = character.class;
+        document.getElementById('character-race').innerText = character.race;
+        document.getElementById('character-level').innerText = character.level;
+        document.getElementById('character-strength').innerText = character.strength;
+        document.getElementById('character-dexterity').innerText = character.dexterity;
+        document.getElementById('character-constitution').innerText = character.constitution;
+        document.getElementById('character-intelligence').innerText = character.intelligence;
+        document.getElementById('character-wisdom').innerText = character.wisdom;
+        document.getElementById('character-charisma').innerText = character.charisma;
+        document.getElementById('character-hitpoints').innerText = character.hp;
+        document.getElementById('character-armorclass').innerText = character.ac;
+        document.getElementById('character-speed').innerText = character.speed;
+        document.getElementById('character-alignment').innerText = character.alignment;
+        document.getElementById('character-background').innerText = character.background;
+
+        document.getElementById('character-profile').classList.add('open');
+    }
+
+    // Function to close the character profile
+    function closeCharacterProfile() {
+        document.getElementById('character-profile').classList.remove('open');
+    }
+
+    // Add event listener to close button
+    document.getElementById('close-character-profile').addEventListener('click', closeCharacterProfile);
+
+    // Add event listeners to character items
+    const characterItems = document.querySelectorAll('.character-item');
+    characterItems.forEach((item, index) => {
+        item.addEventListener('click', function() {
+            const character = characters[index];
+            openCharacterProfile(character);
+        });
+    });
+});
+
+    // Example characters for testing (replace with actual character data)
+    const characters = [
+        {
+            name: 'Garett',
+            class: 'Rogue',
+            race: 'Human',
+            level: 5,
+            strength: 10,
+            dexterity: 18,
+            constitution: 12,
+            intelligence: 12,
+            wisdom: 13,
+            charisma: 15,
+            hp: 30,
+            ac: 12,
+            speed: 30,
+            alignment: 'Chaotic Good',
+            background: 'Bandit',
+            fluffUrl: 'https://i.imgur.com/TPj4Qyp.png'
+        }
+        // Add more characters as needed
+    ];
+
+</script>
 </body>
+
 </html>
