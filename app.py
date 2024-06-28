@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
 from neo4j import GraphDatabase
-
+import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
@@ -135,7 +135,6 @@ def get_five_monsters():
             })
         return monsters
 
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -243,6 +242,76 @@ def create_character():
         alignments = get_alignments()
         backgrounds = get_backgrounds()
         return render_template('create_character.html', classes=classes, races=races, alignments=alignments, backgrounds=backgrounds)
+
+def get_monster_details(monster_name):
+    query = """
+    MATCH (m:Monster {name: $name})
+    OPTIONAL MATCH (m)-[:HAS_SIZE]->(size:Size)
+    OPTIONAL MATCH (m)-[:HAS_TYPE]->(type:Type)
+    OPTIONAL MATCH (m)-[:HAS_ALIGNMENT]->(alignment:Alignment)
+    OPTIONAL MATCH (m)-[:HAS_CR]->(cr:ChallengeRating)
+    OPTIONAL MATCH (m)-[:HAS_SPEED]->(speed:Speed)
+    OPTIONAL MATCH (m)-[:KNOWS_LANGUAGE]->(language:Language)
+    OPTIONAL MATCH (m)-[:HAS_TRAIT]->(trait:Trait)
+    OPTIONAL MATCH (m)-[:HAS_ACTION]->(action:Action)
+    OPTIONAL MATCH (m)-[:HAS_AC]->(ac:ArmorClass)
+    OPTIONAL MATCH (m)-[:HAS_TAG]->(tag:Tag)
+    OPTIONAL MATCH (m)-[:HAS_SKILL]->(skill:Skill)
+    OPTIONAL MATCH (m)-[:HAS_SAVE]->(save:Save)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_0]->(spell0:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_1]->(spell1:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_2]->(spell2:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_3]->(spell3:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_4]->(spell4:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_5]->(spell5:Spell)
+    RETURN m, size, type, alignment, cr, speed, language, trait, action, ac, tag, skill, save, 
+           collect(distinct spell0) as spell0, collect(distinct spell1) as spell1, 
+           collect(distinct spell2) as spell2, collect(distinct spell3) as spell3, 
+           collect(distinct spell4) as spell4, collect(distinct spell5) as spell5
+    """
+    with driver.session() as session:
+        start_time = time.time()
+        result = session.run(query, name=monster_name)
+        end_time = time.time()
+        
+        monster_details = result.single()
+        
+        if not monster_details:
+            return None
+        
+        response = {
+            "monster": dict(monster_details["m"]),
+            "size": dict(monster_details["size"]) if monster_details["size"] else None,
+            "type": dict(monster_details["type"]) if monster_details["type"] else None,
+            "alignment": dict(monster_details["alignment"]) if monster_details["alignment"] else None,
+            "cr": dict(monster_details["cr"]) if monster_details["cr"] else None,
+            "speed": dict(monster_details["speed"]) if monster_details["speed"] else None,
+            "language": dict(monster_details["language"]) if monster_details["language"] else None,
+            "trait": dict(monster_details["trait"]) if monster_details["trait"] else None,
+            "action": dict(monster_details["action"]) if monster_details["action"] else None,
+            "ac": dict(monster_details["ac"]) if monster_details["ac"] else None,
+            "tag": dict(monster_details["tag"]) if monster_details["tag"] else None,
+            "skill": dict(monster_details["skill"]) if monster_details["skill"] else None,
+            "save": dict(monster_details["save"]) if monster_details["save"] else None,
+            "spells": {
+                "level_0": [dict(spell) for spell in set(monster_details["spell0"])],
+                "level_1": [dict(spell) for spell in set(monster_details["spell1"])],
+                "level_2": [dict(spell) for spell in set(monster_details["spell2"])],
+                "level_3": [dict(spell) for spell in set(monster_details["spell3"])],
+                "level_4": [dict(spell) for spell in set(monster_details["spell4"])],
+                "level_5": [dict(spell) for spell in set(monster_details["spell5"])],
+            },
+            "execution_time": end_time - start_time
+        }
+        return response
+
+@app.route('/get_monster/<name>', methods=['GET'])
+def get_monster(name):
+    monster_details = get_monster_details(name)
+    if monster_details:
+        return jsonify(monster_details), 200
+    else:
+        return jsonify({"error": "Monster not found"}), 404
 
 @app.route('/dm_dashboard/<username>', methods=['GET', 'POST'])
 def dm_dashboard(username):

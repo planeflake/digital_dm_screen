@@ -7,56 +7,217 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <style>
-.character-profile {
+        /* CSS code remains unchanged */
+        /* Include all the previously provided CSS here */
+
+ /* Monster Profile */
+.monster-profile {
     position: fixed;
     top: 0;
     right: -100%;
-    width: 400px;
+    width: 500px; /* Increased width */
     height: 100%;
-    background-color: white;
+    background-color: #fff;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     transition: right 0.3s ease;
+    padding: 20px; /* Added padding */
+    font-family: 'Garamond', serif;
+    line-height: 1.5;
 }
 
-.character-profile.open {
+.monster-profile.open {
     right: 0;
 }
 
-.character-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 20px;
-}
-
-.character-header {
+.monster-header {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
-    height: 150px; /* Adjust as needed */
+    
 }
 
-.character-header img {
+.monster-header img {
     height: 100%;
     width: 150px;
-    max-height: 200px; /* Ensure it matches the height of the character-header */
+    max-height: 200px;
     object-fit: cover;
+    margin-right: 20px;
+    border: 2px solid #000;
+    border-radius: 10px;
 }
 
-.character-info {
-    margin-left: 20px;
+.monster-info h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
 }
 
-.character-details {
-    display: flex;
-    flex-direction: column;
+.monster-info p {
+    margin: 5px 0;
+    font-size: 16px;
 }
 
-.character-details p {
+.monster-details {
+    margin-top: 20px;
+}
+
+.monster-details h4 {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 2px solid #000;
+    padding-bottom: 5px;
+}
+
+.monster-details p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+#monster-spells h5 {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#monster-spells ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+#monster-spells li {
     margin: 5px 0;
 }
 
+/* D&D specific styling */
+.dd-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #d44e4c;
+    border-bottom: 2px solid #d44e4c;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.dd-section {
+    margin-bottom: 20px;
+}
+
+.dd-section h4 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.dd-section p,
+.dd-section ul {
+    font-size: 16px;
+}
+
+.dd-section ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.dd-section ul li {
+    margin-bottom: 5px;
+}
+
+#close-monster-profile {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+
+        .condition-profile {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 400px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+        }
+
+        .condition-profile.open {
+            right: 0;
+        }
+
+        .condition-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .condition-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .condition-info i {
+            font-size: 50px;
+            margin-right: 20px;
+        }
+
+        .character-profile {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 400px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+        }
+
+        .character-profile.open {
+            right: 0;
+        }
+
+        .character-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .character-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            height: 150px;
+        }
+
+        .character-header img {
+            height: 100%;
+            width: 150px;
+            max-height: 200px;
+            object-fit: cover;
+        }
+
+        .character-info {
+            margin-left: 20px;
+        }
+
+        .character-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .character-details p {
+            margin: 5px 0;
+        }
 
         body {
             font-family: Arial, sans-serif;
@@ -279,7 +440,7 @@
             font-size: 24px;
             margin-bottom: 10px;
         }
-</style>
+    </style>
 </head>
 
 <body>
@@ -330,9 +491,6 @@
                 {% endfor %}
             </div>
         </div>
-        
-        
-
         <div id="monsters" class="tab-content">
             <h3>Monsters</h3>
             <div class="monster-search">
@@ -340,7 +498,7 @@
             </div>
             <div id="monster-list" class="monster-grid">
                 {% for monster in monsters %}
-                <div class="monster-box">
+                <div class="monster-box monster-item" data-name="{{ monster.name }}">
                     <img src="{{ monster.tokenUrl }}" alt="{{ monster.name }}" width="50">
                     <p>Name: {{ monster.name }}</p>
                     <p>AC: {{ monster.ac }}</p>
@@ -350,11 +508,58 @@
                 {% endfor %}
             </div>
         </div>
+
+<div id="monster-profile" class="monster-profile">
+    <button id="close-monster-profile">&times;</button>
+    <div class="monster-header">
+        <img id="monster-image" src="" alt="Monster Image">
+        <div class="monster-info">
+            <h3 id="monster-name"></h3>
+            <p><strong>AC:</strong> <span id="monster-ac"></span></p>
+            <p><strong>CR:</strong> <span id="monster-cr"></span></p>
+            <p><strong>Type:</strong> <span id="monster-type"></span></p>
+            <p><strong>Size:</strong> <span id="monster-size"></span></p>
+            <p><strong>Alignment:</strong> <span id="monster-alignment"></span></p>
+            <p><strong>Speed:</strong> <span id="monster-speed"></span></p>
+            <p><strong>HP:</strong> <span id="monster-hp"></span></p>
+            <p><strong>Languages:</strong> <span id="monster-languages"></span></p>
+        </div>
+    </div>
+    <div class="monster-details">
+        <div class="dd-section">
+            <h4 class="dd-title">Abilities</h4>
+            <p><strong>STR:</strong> <span id="monster-str"></span> <strong>DEX:</strong> <span id="monster-dex"></span> <strong>CON:</strong> <span id="monster-con"></span></p>
+            <p><strong>INT:</strong> <span id="monster-int"></span> <strong>WIS:</strong> <span id="monster-wis"></span> <strong>CHA:</strong> <span id="monster-cha"></span></p>
+        </div>
+        <div class="dd-section">
+            <h4 class="dd-title">Skills</h4>
+            <p id="monster-all-skills"></p>
+        </div>
+        <div class="dd-section">
+            <h4 class="dd-title">Saves</h4>
+            <p id="monster-saves"></p>
+        </div>
+        <div class="dd-section">
+            <h4 class="dd-title">Traits</h4>
+            <p id="monster-traits"></p>
+        </div>
+        <div class="dd-section">
+            <h4 class="dd-title">Actions</h4>
+            <p id="monster-actions"></p>
+        </div>
+        <div class="dd-section">
+            <h4 class="dd-title">Spells</h4>
+            <div id="monster-available-spells"></div>
+        </div>
+    </div>
+</div>
+
+
         <div id="conditions" class="tab-content">
             <h3>Conditions</h3>
             <div class="condition-grid">
                 {% for condition in conditions %}
-                <div class="condition-box">
+                <div class="condition-box condition-item" data-index="{{ loop.index0 }}">
                     <i class="{{ condition.icon }}"></i>
                     <p>{{ condition.name|capitalize }}</p>
                 </div>
@@ -376,38 +581,45 @@
                 <!-- Initiative list will be populated by JavaScript -->
             </ul>
         </div>
-    </div>
-    <div id="character-profile" class="character-profile">
-        <div class="character-content">
-            <button id="close-character-profile">&times;</button>
-            <div class="character-header">
-                <img id="character-image" src="" alt="Character Image">
-                <div class="character-info">
-                    <h3 id="character-name"></h3>
-                    <p><strong>Class:</strong> <span id="character-class"></span></p>
-                    <p><strong>Race:</strong> <span id="character-race"></span></p>
-                    <p><strong>Level:</strong> <span id="character-level"></span></p>
+
+        <div id="character-profile" class="character-profile">
+            <div class="character-content">
+                <button id="close-character-profile">&times;</button>
+                <div class="character-header">
+                    <img id="character-image" src="" alt="Character Image">
+                    <div class="character-info">
+                        <h3 id="character-name"></h3>
+                        <p><strong>Class:</strong> <span id="character-class"></span></p>
+                        <p><strong>Race:</strong> <span id="character-race"></span></p>
+                        <p><strong>Level:</strong> <span id="character-level"></span></p>
+                    </div>
+                </div>
+                <div class="character-details">
+                    <p><strong>Strength:</strong> <span id="character-strength"></span></p>
+                    <p><strong>Dexterity:</strong> <span id="character-dexterity"></span></p>
+                    <p><strong>Constitution:</strong> <span id="character-constitution"></span></p>
+                    <p><strong>Intelligence:</strong> <span id="character-intelligence"></span></p>
+                    <p><strong>Wisdom:</strong> <span id="character-wisdom"></span></p>
+                    <p><strong>Charisma:</strong> <span id="character-charisma"></span></p>
+                    <p><strong>Hit Points:</strong> <span id="character-hitpoints"></span></p>
+                    <p><strong>Armor Class:</strong> <span id="character-armorclass"></span></p>
+                    <p><strong>Speed:</strong> <span id="character-speed"></span></p>
+                    <p><strong>Alignment:</strong> <span id="character-alignment"></span></p>
+                    <p><strong>Background:</strong> <span id="character-background"></span></p>
                 </div>
             </div>
-            <div class="character-details">
-                <p><strong>Strength:</strong> <span id="character-strength"></span></p>
-                <p><strong>Dexterity:</strong> <span id="character-dexterity"></span></p>
-                <p><strong>Constitution:</strong> <span id="character-constitution"></span></p>
-                <p><strong>Intelligence:</strong> <span id="character-intelligence"></span></p>
-                <p><strong>Wisdom:</strong> <span id="character-wisdom"></span></p>
-                <p><strong>Charisma:</strong> <span id="character-charisma"></span></p>
-                <p><strong>Hit Points:</strong> <span id="character-hitpoints"></span></p>
-                <p><strong>Armor Class:</strong> <span id="character-armorclass"></span></p>
-                <p><strong>Speed:</strong> <span id="character-speed"></span></p>
-                <p><strong>Alignment:</strong> <span id="character-alignment"></span></p>
-                <p><strong>Background:</strong> <span id="character-background"></span></p>
+        </div>
+
+        <div id="condition-profile" class="condition-profile">
+            <div class="condition-content">
+                <button id="close-condition-profile">&times;</button>
+                <div class="condition-info">
+                    <h3 id="condition-name"></h3>
+                    <i id="condition-icon" class=""></i>
+                </div>
             </div>
         </div>
     </div>
-    
-    
-    
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const socket = io();
@@ -593,71 +805,103 @@
             document.querySelector('.tabs button[data-tab="combat"]').classList.add('active');
             document.getElementById('combat').classList.add('active');
         });
-        document.addEventListener('DOMContentLoaded', function() {
-    // Function to open the character profile
-    function openCharacterProfile(character) {
-        document.getElementById('character-image').src = character.fluffUrl;
-        document.getElementById('character-name').innerText = character.name;
-        document.getElementById('character-class').innerText = character.class;
-        document.getElementById('character-race').innerText = character.race;
-        document.getElementById('character-level').innerText = character.level;
-        document.getElementById('character-strength').innerText = character.strength;
-        document.getElementById('character-dexterity').innerText = character.dexterity;
-        document.getElementById('character-constitution').innerText = character.constitution;
-        document.getElementById('character-intelligence').innerText = character.intelligence;
-        document.getElementById('character-wisdom').innerText = character.wisdom;
-        document.getElementById('character-charisma').innerText = character.charisma;
-        document.getElementById('character-hitpoints').innerText = character.hp;
-        document.getElementById('character-armorclass').innerText = character.ac;
-        document.getElementById('character-speed').innerText = character.speed;
-        document.getElementById('character-alignment').innerText = character.alignment;
-        document.getElementById('character-background').innerText = character.background;
+        document.addEventListener('DOMContentLoaded', function () {
+    const closeMonsterProfileButton = document.getElementById('close-monster-profile');
 
-        document.getElementById('character-profile').classList.add('open');
-    }
-
-    // Function to close the character profile
-    function closeCharacterProfile() {
-        document.getElementById('character-profile').classList.remove('open');
-    }
-
-    // Add event listener to close button
-    document.getElementById('close-character-profile').addEventListener('click', closeCharacterProfile);
-
-    // Add event listeners to character items
-    const characterItems = document.querySelectorAll('.character-item');
-    characterItems.forEach((item, index) => {
-        item.addEventListener('click', function() {
-            const character = characters[index];
-            openCharacterProfile(character);
+    if (closeMonsterProfileButton) {
+        closeMonsterProfileButton.addEventListener('click', function () {
+            document.getElementById('monster-profile').classList.remove('open');
         });
-    });
+    }
 });
 
-    // Example characters for testing (replace with actual character data)
-    const characters = [
-        {
-            name: 'Garett',
-            class: 'Rogue',
-            race: 'Human',
-            level: 5,
-            strength: 10,
-            dexterity: 18,
-            constitution: 12,
-            intelligence: 12,
-            wisdom: 13,
-            charisma: 15,
-            hp: 30,
-            ac: 12,
-            speed: 30,
-            alignment: 'Chaotic Good',
-            background: 'Bandit',
-            fluffUrl: 'https://i.imgur.com/TPj4Qyp.png'
-        }
-        // Add more characters as needed
-    ];
+        document.addEventListener('DOMContentLoaded', function () {
+            const monsterItems = document.querySelectorAll('.monster-item');
 
-</script>
+            monsterItems.forEach((item) => {
+                item.addEventListener('click', async function () {
+                    const monsterName = this.dataset.name;
+                    const response = await fetch(`/get_monster/${monsterName}`);
+                    const monster = await response.json();
+                    //console.log(monster); // Log the monster object for debugging
+                    openMonsterProfile(monster);
+                });
+            });
+        });
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        function openMonsterProfile(monster) {
+            if (!monster) {
+                console.error('Monster data is undefined');
+                return;
+            }
+
+            document.getElementById('monster-image').src = monster.monster.fluffUrl || '';
+            document.getElementById('monster-name').innerText = monster.monster.name || 'Unknown';
+
+            const acs = Array.isArray(monster.ac) ? monster.ac : [];
+            const acText = acs.map(ac => ac.condition ? `${ac.ac} (${ac.condition})` : `${ac.ac}`).join(', ');
+            document.getElementById('monster-ac').innerText = acText || 'N/A';
+
+            document.getElementById('monster-cr').innerText = monster.cr.cr || 'N/A';
+            document.getElementById('monster-speed').innerText = monster.speed ? `${monster.speed.type}: ${monster.speed.amount}` : 'N/A';
+
+            const traits = Array.isArray(monster.trait) ? monster.trait : [];
+            const actions = Array.isArray(monster.action) ? monster.action : [];
+
+            document.getElementById('monster-traits').innerText = traits.map(trait => trait.entries).join(', ') || 'None';
+            document.getElementById('monster-actions').innerText = actions.map(action => action.entries).join(', ') || 'None';
+
+            document.getElementById('monster-alignment').innerText = monster.alignment.alignment || 'N/A';
+            document.getElementById('monster-size').innerText = monster.size.size || 'N/A';
+            document.getElementById('monster-languages').innerText = monster.language ? `${monster.language.label} (${monster.language.name})` : 'N/A';
+
+            document.getElementById('monster-str').innerText = monster.monster.str || 'N/A';
+            document.getElementById('monster-dex').innerText = monster.monster.dex || 'N/A';
+            document.getElementById('monster-con').innerText = monster.monster.con || 'N/A';
+            document.getElementById('monster-int').innerText = monster.monster.int || 'N/A';
+            document.getElementById('monster-wis').innerText = monster.monster.wis || 'N/A';
+            document.getElementById('monster-cha').innerText = monster.monster.cha || 'N/A';
+
+            const skillsElement = document.getElementById('monster-all-skills');
+            console.log(monster.skill)
+if (monster.skill && Array.isArray(monster.skill) && monster.skill.length > 0) {
+    skillsElement.innerHTML = monster.skill.map(skill => `${skill.name}: ${skill.value}`).join(', ');
+} else {
+    skillsElement.innerText = (`${capitalizeFirstLetter(monster.skill.name)}: ${monster.skill.value}`);
+}
+
+
+            document.getElementById('monster-saves').innerText = monster.save ? `${monster.save.ability}: ${monster.save.bonus}` : 'N/A';
+
+    // Clear existing spells
+    const spellsContainer = document.getElementById('monster-available-spells');
+    spellsContainer.innerHTML = '';
+
+            const spellLevels = ['level_0', 'level_1', 'level_2', 'level_3', 'level_4', 'level_5'];
+         spellLevels.forEach(level => {
+        const spells = monster.spells[level] || [];
+        if (spells.length > 0) {
+            const spellList = document.createElement('ul');
+            spells.forEach(spell => {
+                const spellItem = document.createElement('li');
+                spellItem.innerText = `${spell.name} (Page: ${spell.page})`;
+                spellList.appendChild(spellItem);
+            });
+
+            const levelHeading = document.createElement('h5');
+            levelHeading.innerText = `Level ${level.split('_')[1]}:`;
+            spellsContainer.appendChild(levelHeading);
+            spellsContainer.appendChild(spellList);
+        }
+    });
+            document.getElementById('monster-profile').classList.add('open');
+        }
+
+    </script>
 </body>
 
 </html>
