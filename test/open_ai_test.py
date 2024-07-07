@@ -2,7 +2,12 @@ from openai import OpenAI
 import os
 import json
 
-client = OpenAI(api_key='sk-proj-YSS3a3lisgesb4reDA60T3BlbkFJYoiE1lwn85DWhNmA6gxB')
+from dotenv import load_dotenv
+
+load_dotenv()
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=openai_api_key)
 
 def generate_prompt(data):
     chat_input = [

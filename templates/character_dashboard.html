@@ -227,6 +227,89 @@
             width: 100%;
             padding: 5px;
         }
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.5s, color 0.5s;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+d            background-color: var(--background-color, #f8f8f8);
+            color: var(--text-color, #000);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle {
+            position: relative;
+            width: 180px;
+            height: 90px;
+            background-color: #ddd;
+            border-radius: 45px;
+            cursor: pointer;
+            transition: background-color 0.5s;
+        }
+
+        .toggle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 5px;
+            width: 80px;
+            height: 80px;
+            background-color: #fff;
+            border-radius: 50%;
+            transform: translateY(-50%);
+            transition: left 0.5s, background-color 0.5s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+        }
+
+        .toggle-container.day .toggle::before {
+            left: 5px;
+            background-color: #f1c40f; /* Sun color */
+            content: '\f185';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+        }
+
+        .toggle-container.night .toggle::before {
+            left: 95px;
+            background-color: #2c3e50; /* Moon color */
+            content: '\f186';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+        }
+
+        .toggle-container .sun,
+        .toggle-container .moon {
+            font-size: 50px;
+        }
+
+        .toggle-container.day .toggle {
+            background-color: #f1c40f;
+        }
+
+        .toggle-container.night .toggle {
+            background-color: #2c3e50;
+        }
+
+        .toggle-container.day {
+            --background-color: #f8f8f8;
+            --text-color: #f8f8f8;
+        }
+
+        .toggle-container.night {
+            --background-color: #2c3e50;
+            --text-color: #fff;
+        }        
     </style>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 </head>
@@ -400,8 +483,12 @@
 
         <div id="settings" class="tab-content">
             <div class="settings-option">
-                <label for="darkModeToggle"><i class="fas fa-moon"></i> Dark Mode:</label>
-                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                <label for="fontSelect"><i class="fas fa-palette"></i> Light/Dark Mode:</label>                
+                <div class="container">
+                    <div class="toggle-container day" onclick="toggleMode()">
+                        <div class="toggle"></div>
+                    </div>
+                </div>
             </div>
             <div class="settings-option">
                 <label for="fontSelect"><i class="fas fa-font"></i> Font:</label>
@@ -554,6 +641,7 @@
                     <div>${image.type}</div>
                     <button onclick="replaceImage('${image.id}')">Replace</button>
                     <button onclick="removeImage('${image.type}')">Remove</button>
+                    <button onclick="">Activate</button>
                 `;
                 gallery.appendChild(item);
             });
@@ -705,7 +793,11 @@
         }
     });
 }
-
+function toggleMode() {
+            const container = document.querySelector('.toggle-container');
+            container.classList.toggle('day');
+            container.classList.toggle('night');
+        }
    </script>
 </body>
 </html>

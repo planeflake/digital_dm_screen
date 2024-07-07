@@ -5,11 +5,14 @@ import time
 import os
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
 
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
-client = OpenAI(api_key='sk-proj-1Ctqx94aRtENfnPcmfogT3BlbkFJiyLNxp2B7DYkJZKN1Rqi')
+client = OpenAI(api_key=openai_api_key)
 
 # Neo4j connection
 uri = 'neo4j+s://b29956d6.databases.neo4j.io'
@@ -21,13 +24,13 @@ driver = GraphDatabase.driver(uri, auth=(user, password))
 players_list = [
     {'username': 'player1'},
     {'username': 'player2'},
-    {'username': 'dm'}
+    {'username': 'dm'},
+    {'username': 'dm2'}
 ]
 characters = [
     {"id": 1, "name": "Character 1", "hit_points": 100},
     {"id": 2, "name": "Character 2", "hit_points": 90}
 ]
-OPENAI_API_KEY = 'sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGES_FOLDER = os.path.join(BASE_DIR, 'src/images')
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'src/images')
@@ -96,7 +99,7 @@ def get_conditions():
         conditions = [{"name": record["name"], "icon": record["icon"]} for record in result]
     return conditions
 
-def get_characters_for_testing():
+def get_characters_for_dm():
     with driver.session() as session:
         result = session.run(
             """
@@ -109,7 +112,7 @@ def get_characters_for_testing():
                    c.level AS level, c.strength AS strength, c.dexterity AS dexterity, 
                    c.constitution AS constitution, c.intelligence AS intelligence,
                    c.wisdom AS wisdom, c.charisma AS charisma, c.token_url AS tokenUrl, 
-                   ac.ac AS ac, cr.cr AS cr, type.type AS type, c.hit_points as hp
+                   ac.ac AS ac, cr.cr AS cr, type.type AS type, c.hit_points as max_hp, c.hit_points as hp
             """
         )
         characters = []
@@ -130,7 +133,8 @@ def get_characters_for_testing():
                 "ac": record["ac"],
                 "cr": record["cr"],
                 "type": record["type"],
-                "hp": record['hp']
+                "hp": record['hp'],
+                "max_hp": record['hp']
             })
         return characters
 
@@ -225,6 +229,68 @@ def calculate_skills(character):
         'Stealth': character['dexterity'],
         'Survival': character['wisdom'],
     }
+
+def get_monster_details(monster_name):
+    query = """
+    MATCH (m:Monster {name: $name})
+    OPTIONAL MATCH (m)-[:HAS_SIZE]->(size:Size)
+    OPTIONAL MATCH (m)-[:HAS_TYPE]->(type:Type)
+    OPTIONAL MATCH (m)-[:HAS_ALIGNMENT]->(alignment:Alignment)
+    OPTIONAL MATCH (m)-[:HAS_CR]->(cr:ChallengeRating)
+    OPTIONAL MATCH (m)-[:HAS_SPEED]->(speed:Speed)
+    OPTIONAL MATCH (m)-[:KNOWS_LANGUAGE]->(language:Language)
+    OPTIONAL MATCH (m)-[:HAS_TRAIT]->(trait:Trait)
+    OPTIONAL MATCH (m)-[:HAS_ACTION]->(action:Action)
+    OPTIONAL MATCH (m)-[:HAS_AC]->(ac:ArmorClass)
+    OPTIONAL MATCH (m)-[:HAS_TAG]->(tag:Tag)
+    OPTIONAL MATCH (m)-[:HAS_SKILL]->(skill:Skill)
+    OPTIONAL MATCH (m)-[:HAS_SAVE]->(save:Save)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_0]->(spell0:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_1]->(spell1:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_2]->(spell2:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_3]->(spell3:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_4]->(spell4:Spell)
+    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_5]->(spell5:Spell)
+    RETURN m, size, type, alignment, cr, speed, language, trait, action, ac, tag, skill, save, 
+           collect(distinct spell0) as spell0, collect(distinct spell1) as spell1, 
+           collect(distinct spell2) as spell2, collect(distinct spell3) as spell3, 
+           collect(distinct spell4) as spell4, collect(distinct spell5) as spell5
+    """
+    with driver.session() as session:
+        start_time = time.time()
+        result = session.run(query, name=monster_name)
+        end_time = time.time()
+        
+        monster_details = result.single()
+        
+        if not monster_details:
+            return None
+        
+        response = {
+            "monster": dict(monster_details["m"]),
+            "size": dict(monster_details["size"]) if monster_details["size"] else None,
+            "type": dict(monster_details["type"]) if monster_details["type"] else None,
+            "alignment": dict(monster_details["alignment"]) if monster_details["alignment"] else None,
+            "cr": dict(monster_details["cr"]) if monster_details["cr"] else None,
+            "speed": dict(monster_details["speed"]) if monster_details["speed"] else None,
+            "language": dict(monster_details["language"]) if monster_details["language"] else None,
+            "trait": dict(monster_details["trait"]) if monster_details["trait"] else None,
+            "action": dict(monster_details["action"]) if monster_details["action"] else None,
+            "ac": dict(monster_details["ac"]) if monster_details["ac"] else None,
+            "tag": dict(monster_details["tag"]) if monster_details["tag"] else None,
+            "skill": dict(monster_details["skill"]) if monster_details["skill"] else None,
+            "save": dict(monster_details["save"]) if monster_details["save"] else None,
+            "spells": {
+                "level_0": [dict(spell) for spell in set(monster_details["spell0"])],
+                "level_1": [dict(spell) for spell in set(monster_details["spell1"])],
+                "level_2": [dict(spell) for spell in set(monster_details["spell2"])],
+                "level_3": [dict(spell) for spell in set(monster_details["spell3"])],
+                "level_4": [dict(spell) for spell in set(monster_details["spell4"])],
+                "level_5": [dict(spell) for spell in set(monster_details["spell5"])],
+            },
+            "execution_time": end_time - start_time
+        }
+        return response
 
 @app.route('/generate_prompt', methods=['POST'])
 def generate_prompt():
@@ -346,14 +412,24 @@ def players_main(username):
 def load_character(character_id):
     return redirect(url_for('character_dashboard', character_id=character_id))
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    username = request.form['username']
-    if any(player['username'] == username for player in players_list):
-        session['username'] = username
-        if username == 'dm':
-            return redirect(url_for('dm_dashboard', username=username))
-        return redirect(url_for('player_dashboard', username=username))
+    if request.method == 'POST':
+        username = request.form['username']
+        print(f"Login attempt by username: {username}")  # Debugging print
+
+        if any(player['username'] == username for player in players_list):
+            session['username'] = username
+            if username == 'dm':
+                print(f"Redirecting to DM dashboard for {username}")  # Debugging print
+                return redirect(url_for('dm_dashboard', username=username))
+            if username == 'dm2':
+                print(f"Redirecting to DM2 dashboard for {username}")  # Debugging print
+                return redirect(url_for('dm_dashboard2', username=username))
+            print(f"Redirecting to player dashboard for {username}")  # Debugging print
+            return redirect(url_for('player_dashboard', username=username))
+        print("Username not found in players list")  # Debugging print
+        return redirect(url_for('home'))
     return redirect(url_for('home'))
 
 @app.route('/player_dashboard/<username>', methods=['GET', 'POST'])
@@ -443,68 +519,6 @@ def create_character():
         backgrounds = get_backgrounds()
         return render_template('create_character.html', classes=classes, races=races, alignments=alignments, backgrounds=backgrounds)
 
-def get_monster_details(monster_name):
-    query = """
-    MATCH (m:Monster {name: $name})
-    OPTIONAL MATCH (m)-[:HAS_SIZE]->(size:Size)
-    OPTIONAL MATCH (m)-[:HAS_TYPE]->(type:Type)
-    OPTIONAL MATCH (m)-[:HAS_ALIGNMENT]->(alignment:Alignment)
-    OPTIONAL MATCH (m)-[:HAS_CR]->(cr:ChallengeRating)
-    OPTIONAL MATCH (m)-[:HAS_SPEED]->(speed:Speed)
-    OPTIONAL MATCH (m)-[:KNOWS_LANGUAGE]->(language:Language)
-    OPTIONAL MATCH (m)-[:HAS_TRAIT]->(trait:Trait)
-    OPTIONAL MATCH (m)-[:HAS_ACTION]->(action:Action)
-    OPTIONAL MATCH (m)-[:HAS_AC]->(ac:ArmorClass)
-    OPTIONAL MATCH (m)-[:HAS_TAG]->(tag:Tag)
-    OPTIONAL MATCH (m)-[:HAS_SKILL]->(skill:Skill)
-    OPTIONAL MATCH (m)-[:HAS_SAVE]->(save:Save)
-    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_0]->(spell0:Spell)
-    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_1]->(spell1:Spell)
-    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_2]->(spell2:Spell)
-    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_3]->(spell3:Spell)
-    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_4]->(spell4:Spell)
-    OPTIONAL MATCH (m)-[:CAN_CAST_SPELL_LEVEL_5]->(spell5:Spell)
-    RETURN m, size, type, alignment, cr, speed, language, trait, action, ac, tag, skill, save, 
-           collect(distinct spell0) as spell0, collect(distinct spell1) as spell1, 
-           collect(distinct spell2) as spell2, collect(distinct spell3) as spell3, 
-           collect(distinct spell4) as spell4, collect(distinct spell5) as spell5
-    """
-    with driver.session() as session:
-        start_time = time.time()
-        result = session.run(query, name=monster_name)
-        end_time = time.time()
-        
-        monster_details = result.single()
-        
-        if not monster_details:
-            return None
-        
-        response = {
-            "monster": dict(monster_details["m"]),
-            "size": dict(monster_details["size"]) if monster_details["size"] else None,
-            "type": dict(monster_details["type"]) if monster_details["type"] else None,
-            "alignment": dict(monster_details["alignment"]) if monster_details["alignment"] else None,
-            "cr": dict(monster_details["cr"]) if monster_details["cr"] else None,
-            "speed": dict(monster_details["speed"]) if monster_details["speed"] else None,
-            "language": dict(monster_details["language"]) if monster_details["language"] else None,
-            "trait": dict(monster_details["trait"]) if monster_details["trait"] else None,
-            "action": dict(monster_details["action"]) if monster_details["action"] else None,
-            "ac": dict(monster_details["ac"]) if monster_details["ac"] else None,
-            "tag": dict(monster_details["tag"]) if monster_details["tag"] else None,
-            "skill": dict(monster_details["skill"]) if monster_details["skill"] else None,
-            "save": dict(monster_details["save"]) if monster_details["save"] else None,
-            "spells": {
-                "level_0": [dict(spell) for spell in set(monster_details["spell0"])],
-                "level_1": [dict(spell) for spell in set(monster_details["spell1"])],
-                "level_2": [dict(spell) for spell in set(monster_details["spell2"])],
-                "level_3": [dict(spell) for spell in set(monster_details["spell3"])],
-                "level_4": [dict(spell) for spell in set(monster_details["spell4"])],
-                "level_5": [dict(spell) for spell in set(monster_details["spell5"])],
-            },
-            "execution_time": end_time - start_time
-        }
-        return response
-
 @app.route('/get_monster/<name>', methods=['GET'])
 def get_monster(name):
     monster_details = get_monster_details(name)
@@ -516,9 +530,17 @@ def get_monster(name):
 @app.route('/dm_dashboard/<username>', methods=['GET', 'POST'])
 def dm_dashboard(username):
     monsters = get_five_monsters()
-    characters = get_characters_for_testing()
+    characters = get_characters_for_dm()
     conditions=get_conditions()
     return render_template('dm_dashboard.html', monsters=monsters, characters=characters,conditions=conditions)
+
+@app.route('/dm_dashboard2/<username>', methods=['GET', 'POST'])
+def dm_dashboard2(username):
+    monsters = get_five_monsters()
+    characters = get_characters_for_dm()
+    conditions=get_conditions()
+    return render_template('dm_dashboard2.html', monsters=monsters, characters=characters,conditions=conditions)
+
 
 @app.route('/character_dashboard/<int:character_id>')
 def character_dashboard(character_id):
