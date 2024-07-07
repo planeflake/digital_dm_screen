@@ -4,13 +4,12 @@ from neo4j import GraphDatabase
 import time
 import os
 import json
-import openai
 from openai import OpenAI
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
-client = OpenAI(api_key='sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV')
+client = OpenAI(api_key='sk-proj-1Ctqx94aRtENfnPcmfogT3BlbkFJiyLNxp2B7DYkJZKN1Rqi')
 
 # Neo4j connection
 uri = 'neo4j+s://b29956d6.databases.neo4j.io'
@@ -24,15 +23,13 @@ players_list = [
     {'username': 'player2'},
     {'username': 'dm'}
 ]
-
 characters = [
     {"id": 1, "name": "Character 1", "hit_points": 100},
     {"id": 2, "name": "Character 2", "hit_points": 90}
 ]
 OPENAI_API_KEY = 'sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV'
-client = OpenAI(api_key='sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV')
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGES_FOLDER = os.path.join(BASE_DIR, 'src/images')
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'src/images')
 JSON_FILE = os.path.join(BASE_DIR, 'src/images.json')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -45,8 +42,6 @@ def startup():
         with open(JSON_FILE, 'w') as file:
             json.dump({}, file)
 
-startup()
-
 def read_json():
     with open(JSON_FILE, 'r') as file:
         return json.load(file)
@@ -55,8 +50,7 @@ def write_json(data):
     with open(JSON_FILE, 'w') as file:
         json.dump(data, file, indent=4)
 
-@app.route('/generate_prompt', methods=['POST'])
-def generate_prompt(data):
+def generate_detailed_prompt(data):
     chat_input = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": f"Create a detailed description for an image generation prompt based on the following hero details. Do not use the word 'character', use 'hero' instead: {json.dumps(data)}"}
@@ -73,13 +67,15 @@ def generate_prompt(data):
         print(f"Error generating detailed prompt: {e}")
         return None
 
-@app.route('/generate_images', methods=['POST'])
-def generate_images(prompt):
+def generate_image(prompt):
+    print(f"Generating image with prompt: {prompt}")
     try:
-        response = client.images.generate(model="dall-e-3",
-        prompt=prompt,
-        size="1024x1024",
-        n=1)
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            n=1
+        )
         image_url = response.data[0].url
         return image_url
     except Exception as e:
@@ -208,6 +204,44 @@ def get_all_monsters():
         monsters = [{"name": record["name"], "hp": record["hp"], "dex": record["dex"], "con": record["con"], "int": record["int"], "wis": record["wis"], "cha": record["cha"], "page": record["page"]} for record in result]
     return monsters
 
+def calculate_skills(character):
+    return {
+        'Acrobatics': character['dexterity'],
+        'Animal Handling': character['wisdom'],
+        'Arcana': character['intelligence'],
+        'Athletics': character['strength'],
+        'Deception': character['charisma'],
+        'History': character['intelligence'],
+        'Insight': character['wisdom'],
+        'Intimidation': character['charisma'],
+        'Investigation': character['intelligence'],
+        'Medicine': character['wisdom'],
+        'Nature': character['intelligence'],
+        'Perception': character['wisdom'],
+        'Performance': character['charisma'],
+        'Persuasion': character['charisma'],
+        'Religion': character['intelligence'],
+        'Sleight of Hand': character['dexterity'],
+        'Stealth': character['dexterity'],
+        'Survival': character['wisdom'],
+    }
+
+@app.route('/generate_prompt', methods=['POST'])
+def generate_prompt():
+    data = request.json
+    print("Generating prompt with data:", data)
+    # Generate detailed prompt
+    prompt = generate_detailed_prompt(data)
+    if not prompt:
+        return jsonify({'error': 'Failed to generate prompt'}), 500
+
+    # Generate image
+    image_url = generate_image(prompt)
+    if not image_url:
+        return jsonify({'error': 'Failed to generate image'}), 500
+    
+    return jsonify({'images': [image_url]})
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     try:
@@ -284,7 +318,6 @@ def remove_file():
         write_json(data)
         return jsonify({'success': 'File removed successfully'}), 200
     return jsonify({'error': 'Image or Character not found'}), 404
-
 
 @socketio.on('update_health')
 def handle_update_health(data):
@@ -493,28 +526,6 @@ def character_dashboard(character_id):
     skills = calculate_skills(character)
     return render_template('character_dashboard.html', character=character, skills=skills,character_id=character_id)
 
-def calculate_skills(character):
-    return {
-        'Acrobatics': character['dexterity'],
-        'Animal Handling': character['wisdom'],
-        'Arcana': character['intelligence'],
-        'Athletics': character['strength'],
-        'Deception': character['charisma'],
-        'History': character['intelligence'],
-        'Insight': character['wisdom'],
-        'Intimidation': character['charisma'],
-        'Investigation': character['intelligence'],
-        'Medicine': character['wisdom'],
-        'Nature': character['intelligence'],
-        'Perception': character['wisdom'],
-        'Performance': character['charisma'],
-        'Persuasion': character['charisma'],
-        'Religion': character['intelligence'],
-        'Sleight of Hand': character['dexterity'],
-        'Stealth': character['dexterity'],
-        'Survival': character['wisdom'],
-    }
-
 @socketio.on('next_turn')
 def handle_next_turn(data):
     socketio.emit('update_turn', data, broadcast=True)
@@ -577,6 +588,8 @@ def update_hp():
     socketio.emit('health_updated', {'character_id': character_id, 'new_health': new_hp})
 
     return jsonify({'status': 'success', 'new_hp': new_hp})
+
+startup()
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5001, debug=True)
