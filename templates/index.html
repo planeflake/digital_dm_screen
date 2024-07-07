@@ -3,17 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-container h2 {
+            margin-top: 0;
+            font-size: 1.5em;
+            color: #b71c1c;
+            margin-bottom: 20px;
+        }
+        .login-container button {
+            width: 200px;
+            padding: 15px;
+            margin: 10px;
+            background-color: #b71c1c;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .login-container button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Login</h1>
-        <form action="{{ url_for('login') }}" method="post">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <button type="submit">Login</button>
+    <div class="login-container">
+        <h2>Login as:</h2>
+        <form action="/login" method="POST">
+            <input type="hidden" name="username" value="dm">
+            <button type="submit">DM</button>
+        </form>
+        <form action="/login" method="POST">
+            <input type="hidden" name="username" value="dm2">
+            <button type="submit">DM2</button>
+        </form>
+        <form action="/login" method="POST">
+            <input type="hidden" name="username" value="player1">
+            <button type="submit">Player 1</button>
+        </form>
+        <form action="/login" method="POST">
+            <input type="hidden" name="username" value="player2">
+            <button type="submit">Player 2</button>
         </form>
     </div>
 </body>

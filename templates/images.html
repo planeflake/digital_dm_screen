@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Character Creator</title>
+    <style>
+        #gallery img {
+            width: 300px;
+            height: 300px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create Your Character</h1>
+    
+    <label for="profiles">Choose a profile:</label>
+    <select id="profiles" onchange="populateForm()">
+        <option value="">Select a profile</option>
+        <option value="thief">Thief</option>
+        <option value="fighter">Fighter</option>
+        <option value="artificer">Artificer</option>
+    </select><br><br>
+    
+    <form id="characterForm">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name"><br><br>
+        
+        <label for="race">Race:</label><br>
+        <input type="text" id="race" name="race"><br><br>
+        
+        <label for="class">Class:</label><br>
+        <input type="text" id="class" name="class"><br><br>
+        
+        <label for="age">Age:</label><br>
+        <input type="text" id="age" name="age"><br><br>
+        
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description"></textarea><br><br>
+        
+        <label for="appearance">Appearance:</label><br>
+        <textarea id="appearance" name="appearance"></textarea><br><br>
+        
+        <label for="traits">Traits:</label><br>
+        <textarea id="traits" name="traits"></textarea><br><br>
+        
+        <label for="background">Background:</label><br>
+        <textarea id="background" name="background"></textarea><br><br>
+        
+        <label for="history">History:</label><br>
+        <textarea id="history" name="history"></textarea><br><br>
+        
+        <button type="button" onclick="generateImages()">Create Character</button>
+    </form>
+    
+    <div id="gallery"></div>
+    
+    <script>
+        const profiles = {
+            thief: {
+                name: "Shadow",
+                race: "Elf",
+                class: "Thief",
+                age: "120",
+                description: "A nimble and cunning elf with a talent for stealth.",
+                appearance: "Slender build, sharp eyes, always dressed in dark clothing.",
+                traits: "Quick, Agile, Intelligent",
+                background: "Grew up in the dark alleys of the city, learning to pickpocket and sneak.",
+                history: "Shadow has a history of heists and infiltration missions, always managing to slip away unnoticed."
+            },
+            fighter: {
+                name: "Brutus",
+                race: "Human",
+                class: "Fighter",
+                age: "35",
+                description: "A strong and brave warrior with unmatched combat skills.",
+                appearance: "Muscular build, scarred face, always seen in heavy armor.",
+                traits: "Strong, Courageous, Honorable",
+                background: "Raised in a warrior clan, Brutus trained from a young age to become a formidable fighter.",
+                history: "Brutus has fought in numerous battles, earning a reputation as a fearsome and honorable warrior."
+            },
+            artificer: {
+                name: "Tink",
+                race: "Gnome",
+                class: "Artificer",
+                age: "80",
+                description: "A clever gnome with a knack for invention and enchantment.",
+                appearance: "Small stature, wearing goggles and a tool belt, always has a mischievous grin.",
+                traits: "Creative, Ingenious, Resourceful",
+                background: "Grew up in a gnome community known for its inventors and tinkerers.",
+                history: "Tink has created numerous magical gadgets and tools, always pushing the boundaries of what is possible."
+            }
+        };
+
+        function populateForm() {
+            const profile = document.getElementById('profiles').value;
+            if (profiles[profile]) {
+                document.getElementById('name').value = profiles[profile].name;
+                document.getElementById('race').value = profiles[profile].race;
+                document.getElementById('class').value = profiles[profile].class;
+                document.getElementById('age').value = profiles[profile].age;
+                document.getElementById('description').value = profiles[profile].description;
+                document.getElementById('appearance').value = profiles[profile].appearance;
+                document.getElementById('traits').value = profiles[profile].traits;
+                document.getElementById('background').value = profiles[profile].background;
+                document.getElementById('history').value = profiles[profile].history;
+            } else {
+                document.getElementById('characterForm').reset();
+            }
+        }
+
+        function generateImages() {
+            const formData = {
+                name: document.getElementById('name').value,
+                race: document.getElementById('race').value,
+                class: document.getElementById('class').value,
+                age: document.getElementById('age').value,
+                description: document.getElementById('description').value,
+                appearance: document.getElementById('appearance').value,
+                traits: document.getElementById('traits').value,
+                background: document.getElementById('background').value,
+                history: document.getElementById('history').value,
+            };
+
+            fetch('/generate_images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+                data.images.forEach(imageUrl => {
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    gallery.appendChild(img);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

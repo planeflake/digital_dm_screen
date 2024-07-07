@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+        }
+        input[type="text"], input[type="file"], select {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Campaign Creator</h1>
+        <form>
+            <label for="campaign-name">Campaign Name</label>
+            <input type="text" id="campaign-name" name="campaign-name" required>
+            
+            <label for="campaign-tagline">Campaign Tagline</label>
+            <input type="text" id="campaign-tagline" name="campaign-tagline" required>
+            
+            <label for="world-map">Upload World Map</label>
+            <input type="file" id="world-map" name="world-map" accept="image/*">
+            
+            <label for="location-maps">Upload Location Maps</label>
+            <input type="file" id="location-maps" name="location-maps" accept="image/*">
+            
+            <label for="banner-image">Upload Banner Image</label>
+            <input type="file" id="banner-image" name="banner-image" accept="image/*">
+            
+            <label for="background-image">Upload Background Image</label>
+            <input type="file" id="background-image" name="background-image" accept="image/*">
+            
+            <label for="invite-character">Invite Character</label>
+            <input type="text" id="invite-character" name="invite-character">
+            
+            <label for="invite-player">Invite Player</label>
+            <select id="invite-player" name="invite-player">
+                <option value="player1">Player 1</option>
+                <option value="player2">Player 2</option>
+                <option value="player3">Player 3</option>
+                <option value="player4">Player 4</option>
+                <option value="player5">Player 5</option>
+            </select>
+            
+            <label for="create-location">Create Location</label>
+            <input type="text" id="create-location" name="create-location">
+            
+            <button type="submit">Create Campaign</button>
+        </form>
+    </div>
+</body>
+</html>

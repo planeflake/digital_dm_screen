@@ -1,0 +1,16 @@
+{
+    "371": {
+        "background": {
+            "filename": "src/images/371/background.jpg",
+            "url": "/images/371/background.jpg"
+        },
+        "character": {
+            "filename": "src/images/371/character.jpg",
+            "url": "/images/371/character.jpg"
+        },
+        "token": {
+            "filename": "/home/oli/scripts/digital_dm_screen/src/images/371/token.jpg",
+            "url": "/images/371/token.jpg"
+        }
+    }
+}

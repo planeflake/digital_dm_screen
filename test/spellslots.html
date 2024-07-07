@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Character Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
+        .character-card .header h2 h1{
+            color: red;
+            margin: 0;
+        }
+
+        .character-card {
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: relative;
+            width: 30%;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: left;
+            color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: height 0.3s ease;
+        }
+
+
+
+        .character-card .header img {
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+
+        .character-card .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 10px;
+        }
+
+        .character-card .stats div {
+            display: flex;
+            align-items: center;
+        }
+
+        .character-card .stats div i,
+        .character-card .stats div img {
+            margin-right: 5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .character-card .health-bar-container {
+            position: relative;
+            background-color: #e74c3c;
+            border: 1px solid #c0392b;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 25px;
+            margin-bottom: 10px;
+        }
+
+        .character-card .health-bar {
+            height: 100%;
+            background-color: #c0392b;
+            position: absolute;
+        }
+
+        .character-card .health-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            left: 0;
+            line-height: 25px;
+            font-size: 14px;
+            color: black;
+        }
+
+        .spell-slots {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Opaque white background */
+            border-radius: 5px;
+        }
+
+        .spell-slots div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .spell-slots span {
+            color: black;
+            /* Black text color for better readability */
+            margin-right: 10px;
+        }
+
+        .spell-slots .slot {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 2px;
+            border-radius: 3px;
+            background-color: white;
+            /* Default background color */
+        }
+
+        .spell-slots .slot.available {
+            background-color: black;
+        }
+
+        .spell-slots .slot.used {
+            background-color: red;
+        }
+
+        .character-card .inventory-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .character-stats,
+        .status-effects,
+        .spell-slots {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .inventory-panel {
+            display: none;
+            background-color: burlywood;
+            opacity: 80%;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: display 0.3s ease;
+        }
+
+        .inventory-panel.open {
+            display: block;
+        }
+
+        .inventory-panel .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .inventory-panel .inventory-item i,
+        .inventory-panel .inventory-item img {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .platinum-coin i {
+            color: #e5e4e2;
+            /* Platinum color */
+        }
+
+        .gold-coin i {
+            color: #ffd700;
+            /* Gold color */
+        }
+
+        .silver-coin i {
+            color: #c0c0c0;
+            /* Silver color */
+        }
+
+        .copper-coin i {
+            color: #b87333;
+            /* Copper color */
+        }
+
+        .inventory-item-popup {
+            display: none;
+            position: absolute;
+            background-color: white;
+            color: black;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 200px;
+        }
+
+        .inventory-item.show-popup .inventory-item-popup {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Paladin -->
+        <div id="paladin-card" class="character-card">
+            <div class="character-info">
+                <div class="character-header">
+                    <h1>Scorge</h1>
+                    <h2>Paladin</h2>
+                    <span>Level 5</span>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-dumbbell"></i><span>Str: 16</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-running"></i><span>Dex: 10</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-heartbeat"></i><span>Con: 14</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-brain"></i><span>Int: 8</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-eye"></i><span>Wis: 12</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-theater-masks"></i><span>Cha: 18</span>
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-shield-alt"></i><span>AC: 18</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-heart"></i><span>HP: 60</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-bolt"></i><span>Initiative: +0</span>
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-coins"></i><span>Total Gold: 200</span>
+                    </div>
+                </div>
+                <div class="health-bar-container">
+                    <div class="health-bar" style="width: 75%;"></div>
+                    <div class="health-text">45/60</div>
+                </div>
+                <div class="status-effects">
+                    <div class="status-effect" style="background-color: #00ff00; height:40px; width:40px "><i class="fas fa-hands"></i></div>
+                </div>
+                <div class="spell-slots">
+                    <div>
+                        <span>Level 1</span>
+                        <div class="slot available"></div>
+                        <div class="slot used"></div>
+                    </div>
+                    <div>
+                        <span>Level 2</span>
+                        <div class="slot used"></div>
+                    </div>
+                </div>
+                <button class="inventory-button" onclick="toggleInventory(this)">Inventory</button>
+                <div class="inventory-panel">
+                    <div class="inventory-header">
+                        <span class="inventory-close" onclick="toggleInventory(this)">&times;</span>
+                    </div>
+                    <div class="inventory-content">
+                        <div class="coins">
+                            <div class="platinum-coin"><i class="fas fa-coins"></i><span>PP: 20</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="gold-coin"><i class="fas fa-coins"></i><span>GP: 150</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="silver-coin"><i class="fas fa-coins"></i><span>SP: 30</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="copper-coin"><i class="fas fa-coins"></i><span>CP: 10</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/skull-shield.svg" alt="Shield"
+                                style="width: 20px; height: 20px;">
+                            <span>Sword</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                            <div class="inventory-item-popup">
+                                <h3>Sword</h3>
+                                <p><strong>Type:</strong> Weapon</p>
+                                <p><strong>Damage:</strong> 1d8 + 2</p>
+                                <p><strong>Special:</strong> Can cast Light</p>
+                            </div>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/holy-symbol.svg"
+                                alt="Holy Symbol" style="width: 20px; height: 20px;">
+                            <span>Shield</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                            <div class="inventory-item-popup">
+                                <h3>Shield</h3>
+                                <p><strong>Type:</strong> Armor</p>
+                                <p><strong>AC Bonus:</strong> +2</p>
+                                <p><strong>Special:</strong> Reflects magic missiles</p>
+                            </div>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/orb-wand.svg" alt="Wand"
+                                style="width: 20px; height: 20px;">
+                            <span>Holy Symbol</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                            <div class="inventory-item-popup">
+                                <h3>Holy Symbol</h3>
+                                <p><strong>Type:</strong> Magic Item</p>
+                                <p><strong>Effect:</strong> Boosts healing spells</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Druid -->
+        <div id="druid-card" class="character-card">
+            <div class="character-info">
+                <div class="character-header">
+                    <h1>Dustbunny</h1>
+                    <h2>Druid</h2>
+                    <span>Level 5</span>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-dumbbell"></i><span>Str: 10</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-running"></i><span>Dex: 12</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-heartbeat"></i><span>Con: 14</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-brain"></i><span>Int: 14</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-eye"></i><span>Wis: 18</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-theater-masks"></i><span>Cha: 10</span>
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-shield-alt"></i><span>AC: 16</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-heart"></i><span>HP: 40</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-bolt"></i><span>Initiative: +1</span>
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-coins"></i><span>Total Gold: 100</span>
+                    </div>
+                </div>
+                <div class="health-bar-container">
+                    <div class="health-bar" style="width: 50%;"></div>
+                    <div class="health-text">20/40</div>
+                </div>
+                <div class="status-effects">
+                    <div class="status-effect" style="background-color: #ff0000;"><i
+                            class="fas fa-skull-crossbones"></i></div>
+                </div>
+                <div class="spell-slots">
+                    <div>
+                        <span>Level 1</span>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                        <div class="slot used"></div>
+                        <div class="slot used"></div>
+                    </div>
+                    <div>
+                        <span>Level 2</span>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                        <div class="slot used"></div>
+                    </div>
+                </div>
+                <button class="inventory-button" onclick="toggleInventory(this)">Inventory</button>
+                <div class="inventory-panel">
+                    <div class="inventory-header">
+                        <span class="inventory-close" onclick="toggleInventory(this)">&times;</span>
+                    </div>
+                    <div class="inventory-content">
+                        <div class="coins">
+                            <div class="platinum-coin"><i class="fas fa-coins"></i><span>PP: 0</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="gold-coin"><i class="fas fa-coins"></i><span>GP: 250</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="silver-coin"><i class="fas fa-coins"></i><span>SP: 60</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="copper-coin"><i class="fas fa-coins"></i><span>CP: 10</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/skull-shield.svg" alt="Shield"
+                                style="width: 20px; height: 20px;">
+                            <span>Staff</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/holy-symbol.svg"
+                                alt="Holy Symbol" style="width: 20px; height: 20px;">
+                            <span>Herbs</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/orb-wand.svg" alt="Wand"
+                                style="width: 20px; height: 20px;">
+                            <span>Spell Book</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wizard -->
+        <div id="wizard-card" class="character-card">
+            <div class="character-info">
+                <div class="character-header">
+                    <h1>Shadow</h1>
+                    <h2>Wizard</h2>
+                    <span>Level 5</span>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-dumbbell"></i><span>Str: 8</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-running"></i><span>Dex: 14</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-heartbeat"></i><span>Con: 12</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-brain"></i><span>Int: 18</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-eye"></i><span>Wis: 10</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-theater-masks"></i><span>Cha: 12</span>
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-shield-alt"></i><span>AC: 14</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-heart"></i><span>HP: 30</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-bolt"></i><span>Initiative: +2</span>
+                    </div>
+                </div>
+                <div class="character-stats">
+                    <div>
+                        <i class="fas fa-coins"></i><span>Total Gold: 50</span>
+                    </div>
+                </div>
+                <div class="health-bar-container">
+                    <div class="health-bar" style="width: 33%;"></div>
+                    <div class="health-text">10/30</div>
+                </div>
+                <div class="status-effects">
+                    <div class="status-effect" style="background-color: #ff9900;"><i class="fas fa-dizzy"></i></div>
+                </div>
+                <div class="spell-slots">
+                    <div>
+                        <span>Level 1</span>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                        <div class="slot used"></div>
+                    </div>
+                    <div>
+                        <span>Level 2</span>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                    </div>
+                    <div>
+                        <span>Level 3</span>
+                        <div class="slot available"></div>
+                        <div class="slot available"></div>
+                    </div>
+                </div>
+                <button class="inventory-button" onclick="toggleInventory(this)">Inventory</button>
+                <div class="inventory-panel">
+                    <div class="inventory-header">
+                        <span class="inventory-close" onclick="toggleInventory(this)">&times;</span>
+                    </div>
+                    <div class="inventory-content">
+                        <div class="coins">
+                            <div class="platinum-coin"><i class="fas fa-coins"></i><span>PP: 20</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="gold-coin"><i class="fas fa-coins"></i><span>GP: 150</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="silver-coin"><i class="fas fa-coins"></i><span>SP: 30</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                            <div class="copper-coin"><i class="fas fa-coins"></i><span>CP: 10</span><i
+                                    class="fas fa-hand-paper take-icon"></i></div>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/skull-shield.svg" alt="Shield"
+                                style="width: 20px; height: 20px;">
+                            <span>Wand</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/holy-symbol.svg"
+                                alt="Holy Symbol" style="width: 20px; height: 20px;">
+                            <span>Spell Book</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                        </div>
+                        <div class="inventory-item">
+                            <img src="file:///home/oli/scripts/digital_dm_screen/static/orb-wand.svg" alt="Wand"
+                                style="width: 20px; height: 20px;">
+                            <span>Robes</span>
+                            <i class="fas fa-hand-paper take-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleInventory(button) {
+            console.log("Button clicked:", button);
+            const panel = button.nextElementSibling;
+            console.log("Next sibling element:", panel);
+            if (panel) {
+                console.log("Panel found:", panel);
+                console.log("Panel before toggle:", panel.classList);
+                panel.classList.toggle('open');
+                console.log("Panel after toggle:", panel.classList);
+            }
+        }
+
+        function updateBackgrounds() {
+            const characters = [
+                {
+                    id: 'paladin-card',
+                    fullHealthImage: 'file:///home/oli/scripts/digital_dm_screen/static/paladin.webp',
+                    injuredImage: 'file:///home/oli/scripts/digital_dm_screen/static/paladin-injured.webp',
+                    badlyInjuredImage: 'file:///home/oli/scripts/digital_dm_screen/static/paladin-badly-injured.webp',
+                    healthPercentage: 75
+                },
+                {
+                    id: 'druid-card',
+                    fullHealthImage: 'file:///home/oli/scripts/digital_dm_screen/static/druid.webp',
+                    injuredImage: 'file:///home/oli/scripts/digital_dm_screen/static/druid-injured.webp',
+                    badlyInjuredImage: 'file:///home/oli/scripts/digital_dm_screen/static/druid-badly-injured.webp',
+                    healthPercentage: 50
+                },
+                {
+                    id: 'wizard-card',
+                    fullHealthImage: 'file:///home/oli/scripts/digital_dm_screen/static/wizard.webp',
+                    injuredImage: 'file:///home/oli/scripts/digital_dm_screen/static/wizard-injured.webp',
+                    badlyInjuredImage: 'file:///home/oli/scripts/digital_dm_screen/static/wizard-badly-injured.webp',
+                    healthPercentage: 80
+                }
+            ];
+
+            characters.forEach(character => {
+                const card = document.getElementById(character.id);
+                let backgroundImage = character.fullHealthImage;
+
+                if (character.healthPercentage < 30) {
+                    backgroundImage = character.badlyInjuredImage;
+                } else if (character.healthPercentage < 60) {
+                    backgroundImage = character.injuredImage;
+                }
+
+                card.style.backgroundImage = `url(${backgroundImage})`;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', updateBackgrounds);
+        document.addEventListener('DOMContentLoaded', () => {
+            const inventoryItems = document.querySelectorAll('.inventory-item');
+
+            inventoryItems.forEach(item => {
+                item.addEventListener('mouseenter', (e) => {
+                    const popup = item.querySelector('.inventory-item-popup');
+                    const rect = item.getBoundingClientRect();
+                    popup.style.top = `${rect.top - popup.offsetHeight}px`;
+                    popup.style.left = `${rect.left}px`;
+                    popup.style.display = 'block';
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    const popup = item.querySelector('.inventory-item-popup');
+                    popup.style.display = 'none';
+                });
+            });
+        });
+
+    </script>
+</body>
+
+</html>

@@ -118,7 +118,7 @@
                         <img src="${character.image}" alt="${character.name}">
                         <div class="details">
                             <span>Name: ${character.name}</span>
-                            <span>HP: ${character.hp}</span>
+                            <input type="number" id="hp-input" value="${character.hp}" min="0">
                             <span>AC: ${character.ac}</span>
                             <span>Spell: ${character.spell}</span>
                         </div>
@@ -134,6 +134,7 @@
                 renderCharacterCards(characters, currentTurnIndex);
             });
         });
+      
     </script>
 </body>
 

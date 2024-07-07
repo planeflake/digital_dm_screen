@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>Character Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+        }
         .container {
             display: flex;
             flex-direction: column;
@@ -13,69 +18,75 @@
             justify-content: center;
             padding: 20px;
         }
-
-        .character-details {
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #b71c1c;
+            color: white;
+            border-radius: 5px;
+        }
+        .tab.active {
+            background-color: #d32f2f;
+        }
+        .tab-content {
+            display: none;
             width: 100%;
             max-width: 800px;
-            background-color: #f1f1f1;
+            background-color: #fff;
             padding: 20px;
             border-radius: 10px;
-            position: relative;
-            z-index: 1;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
+        .tab-content.active {
+            display: block;
+        }
         .character-details h2 {
             text-align: center;
         }
-
         .character-details div {
             margin-bottom: 10px;
         }
-
         .character-details label {
             font-weight: bold;
         }
-
         .character-details span {
             margin-left: 10px;
         }
-
         .stats-row {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
         }
-
         .stat-box {
             width: 30%;
             margin-bottom: 10px;
             text-align: center;
         }
-
         .stat-bonus {
             font-size: 24px;
             font-weight: bold;
         }
-
         .skills {
             margin-top: 20px;
         }
-
         .skills h3 {
             text-align: center;
         }
-
         .skill-list {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
         }
-
         .skill-box {
             width: 45%;
             margin-bottom: 10px;
         }
-
         .panel {
             position: fixed;
             background-color: #f1f1f1;
@@ -87,49 +98,40 @@
             border: 2px solid #d4af37;
             border-radius: 10px 10px 0 0;
         }
-
         .panel-bottom {
             bottom: -50%;
         }
-
         .panel-right {
             right: -100%;
             width: 50%;
             height: 100%;
         }
-
         .panel-left {
             left: -100%;
             width: 50%;
             height: 100%;
         }
-
         .panel.open {
             bottom: 0;
             right: 0;
             left: 0;
         }
-
         .toggle-button {
             cursor: pointer;
             margin: 10px;
         }
-
         .toggle-button i {
             font-size: 24px;
         }
-
         .close-button {
             cursor: pointer;
             position: absolute;
             top: 10px;
             right: 10px;
         }
-
         .close-button i {
             font-size: 24px;
         }
-
         .spellbook-content {
             padding: 20px;
             font-family: 'Cursive', sans-serif;
@@ -141,157 +143,568 @@
             background-clip: padding-box;
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px));
         }
-
         .spell {
             margin-bottom: 20px;
         }
-
         .spell h4 {
             margin: 0;
             font-size: 18px;
             color: #b22222;
         }
-
         .spell p {
             margin: 5px 0;
         }
+        .upload-form {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            width: 100%;
+        }
+        .upload-form label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .upload-form input[type="file"] {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .upload-form select {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 5px;
+        }
+        .upload-form button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .upload-form button:hover {
+            background-color: #45a049;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .gallery-item {
+            width: 30%;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .gallery-item img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+        .gallery-item button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #b71c1c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .gallery-item button:hover {
+            background-color: #d32f2f;
+        }
+        .settings-option {
+            margin-bottom: 20px;
+        }
+        .settings-option label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .settings-option select,
+        .settings-option input[type="color"] {
+            width: 100%;
+            padding: 5px;
+        }
     </style>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="character-sheet">Character Sheet</div>
+            <div class="tab" data-tab="images">Images</div>
+            <div class="tab" data-tab="settings">Settings</div>
+            <div class="tab" data-tab="generator">Generator</div>
+        </div>
+
+        <div id="character-sheet" class="tab-content active">
+            <div class="character-details" data-character-id="{{ character_id }}">
+                <h2><i class="fas fa-user"></i> {{ character['name'] }}</h2>
+                <div><label><i class="fas fa-graduation-cap"></i> Class:</label><span>{{ character['class'] }}</span></div>
+                <div><label><i class="fas fa-users"></i> Race:</label><span>{{ character['race'] }}</span></div>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-bonus">{{ character['strength']|modifier }}</div>
+                        <label><i class="fas fa-dumbbell"></i> Strength:</label><span>{{ character['strength'] }}</span>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-bonus">{{ character['dexterity']|modifier }}</div>
+                        <label><i class="fas fa-running"></i> Dexterity:</label><span>{{ character['dexterity'] }}</span>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-bonus">{{ character['constitution']|modifier }}</div>
+                        <label><i class="fas fa-heartbeat"></i> Constitution:</label><span>{{ character['constitution'] }}</span>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-bonus">{{ character['intelligence']|modifier }}</div>
+                        <label><i class="fas fa-brain"></i> Intelligence:</label><span>{{ character['intelligence'] }}</span>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-bonus">{{ character['wisdom']|modifier }}</div>
+                        <label><i class="fas fa-eye"></i> Wisdom:</label><span>{{ character['wisdom'] }}</span>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-bonus">{{ character['charisma']|modifier }}</div>
+                        <label><i class="fas fa-theater-masks"></i> Charisma:</label><span>{{ character['charisma'] }}</span>
+                    </div>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <label for="hpInput"><i class="fas fa-heart"></i> Hit Points:</label>
+                        <span>
+                            <input type="number" id="hpInput" value="{{ character['hit_points'] }}" min="0">
+                            <label>/ {{ character['hit_points'] }}</label>
+                        </span>
+                    </div>
+                    <div class="stat-box"><label><i class="fas fa-shield-alt"></i> Armor Class:</label><span>{{ character['armor_class'] }}</span></div>
+                    <div class="stat-box"><label><i class="fas fa-shoe-prints"></i> Speed:</label><span>{{ character['speed'] }}</span></div>
+                </div>
+                <div><label><i class="fas fa-balance-scale"></i> Alignment:</label><span>{{ character['alignment'] }}</span></div>
+                <div><label><i class="fas fa-book-open"></i> Background:</label><span>{{ character['background'] }}</span></div>
+
+                <div class="skills">
+                    <h3><i class="fas fa-book"></i> Skills</h3>
+                    <div class="skill-list">
+                        {% for skill, value in skills.items() %}
+                        <div class="skill-box"><label>{{ skill }}:</label><span>{{ value }}</span></div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if character['class'] in ['Wizard', 'Sorcerer', 'Cleric', 'Druid','Paladin'] %}
+                <div class="spellbook">
+                    <h3 class="toggle-button" onclick="togglePanel('spellbook-panel')"><i class="fas fa-book"></i> Spellbook</h3>
+                </div>
+                {% endif %}
+
+                <div class="inventory">
+                    <h3 class="toggle-button" onclick="togglePanel('inventory-panel')"><i class="fas fa-box"></i> Inventory</h3>
+                </div>
+
+                <div class="extra-details">
+                    <h3 class="toggle-button" onclick="togglePanel('extra-details-panel')"><i class="fas fa-info-circle"></i> Extra Details</h3>
+                </div>
+            </div>
+
+            <div id="spellbook-panel" class="panel panel-bottom">
+                <span class="close-button" onclick="togglePanel('spellbook-panel')"><i class="fas fa-times"></i></span>
+                <div class="spellbook-content">
+                    <h3>Spellbook</h3>
+                    <div class="spell">
+                        <h4><i class="fas fa-magic"></i> Fireball</h4>
+                        <p><strong>Level:</strong> 3</p>
+                        <p><strong>Casting Time:</strong> 1 action</p>
+                        <p><strong>Range:</strong> 150 feet</p>
+                        <p><strong>Components:</strong> V, S, M (a tiny ball of bat guano and sulfur)</p>
+                        <p><strong>Duration:</strong> Instantaneous</p>
+                        <p><strong>Description:</strong> A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.</p>
+                    </div>
+                    <div class="spell">
+                        <h4><i class="fas fa-magic"></i> Magic Missile</h4>
+                        <p><strong>Level:</strong> 1</p>
+                        <p><strong>Casting Time:</strong> 1 action</p>
+                        <p><strong>Range:</strong> 120 feet</p>
+                        <p><strong>Components:</strong> V, S</p>
+                        <p><strong>Duration:</strong> Instantaneous</p>
+                        <p><strong>Description:</strong> You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="inventory-panel" class="panel panel-right">
+                <span class="close-button" onclick="togglePanel('inventory-panel')"><i class="fas fa-times"></i></span>
+                <div class="spellbook-content">
+                    <h3>Inventory</h3>
+                    <div class="item">
+                        <h4><i class="fas fa-sword"></i> Longsword</h4>
+                        <p><strong>Type:</strong> Weapon</p>
+                        <p><strong>Damage:</strong> 1d8 slashing</p>
+                        <p><strong>Weight:</strong> 3 lbs</p>
+                        <p><strong>Description:</strong> A versatile weapon that can be wielded with one or two hands.</p>
+                    </div>
+                    <div class="item">
+                        <h4><i class="fas fa-shield-alt"></i> Shield</h4>
+                        <p><strong>Type:</strong> Armor</p>
+                        <p><strong>AC Bonus:</strong> +2</p>
+                        <p><strong>Weight:</strong> 6 lbs</p>
+                        <p><strong>Description:</strong> A large shield that provides additional protection in combat.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="extra-details-panel" class="panel panel-left">
+                <span class="close-button" onclick="togglePanel('extra-details-panel')"><i class="fas fa-times"></i></span>
+                <div class="spellbook-content">
+                    <h3>Extra Details</h3>
+                    <div class="detail">
+                        <h4><i class="fas fa-bullseye"></i> Darkvision</h4>
+                        <p><strong>Range:</strong> 60 feet</p>
+                        <p><strong>Description:</strong> You can see in darkness (shades of gray) up to 60 feet.</p>
+                    </div>
+                    <div class="detail">
+                        <h4><i class="fas fa-feather"></i> Feather Fall</h4>
+                        <p><strong>Casting Time:</strong> 1 reaction</p>
+                        <p><strong>Range:</strong> 60 feet</p>
+                        <p><strong>Description:</strong> Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="images" class="tab-content">
+            <div class="upload-form">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="hidden" id="characterId" name="characterId" value="{{ character_id }}">
+                    <label for="imageUpload"><i class="fas fa-upload"></i> Upload Image:</label>
+                    <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
+                    <label for="imageType"><i class="fas fa-image"></i> Image Type:</label>
+                    <select id="imageType" name="imageType">
+                        <option value="background">Background</option>
+                        <option value="character">Character</option>
+                        <option value="injured">Injured</option>
+                        <option value="badly_injured">Badly Injured</option>
+                        <option value="near_death">Near Death</option>
+                        <option value="banner">Banner</option>
+                        <option value="token">Token</option>
+                    </select>
+                    <button type="button" onclick="uploadImage()">Upload</button>
+                </form>
+            </div>
+            
+            <div class="gallery" id="imageGallery">
+                <!-- Dynamically populated with uploaded images -->
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="settings-option">
+                <label for="darkModeToggle"><i class="fas fa-moon"></i> Dark Mode:</label>
+                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+            </div>
+            <div class="settings-option">
+                <label for="fontSelect"><i class="fas fa-font"></i> Font:</label>
+                <select id="fontSelect" onchange="changeFont()">
+                    <option value="Arial">Arial</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <label for="primaryColor"><i class="fas fa-palette"></i> Primary Color:</label>
+                <input type="color" id="primaryColor" onchange="changePrimaryColor()">
+            </div>
+        </div>
+
+        <div id="generator" class="tab-content">
+            <label for="profiles">Choose a profile:</label>
+            <select id="profiles" onchange="populateForm()">
+                <option value="">Select a profile</option>
+                <option value="thief">Thief</option>
+                <option value="fighter">Fighter</option>
+                <option value="artificer">Artificer</option>
+            </select><br><br>
+            
+            <form id="characterForm">
+                <label for="name">Name:</label><br>
+                <input type="text" id="name" name="name"><br><br>
+                
+                <label for="race">Race:</label><br>
+                <input type="text" id="race" name="race"><br><br>
+                
+                <label for="class">Class:</label><br>
+                <input type="text" id="class" name="class"><br><br>
+                
+                <label for="age">Age:</label><br>
+                <input type="text" id="age" name="age"><br><br>
+                
+                <label for="description">Description:</label><br>
+                <textarea id="description" name="description"></textarea><br><br>
+                
+                <label for="appearance">Appearance:</label><br>
+                <textarea id="appearance" name="appearance"></textarea><br><br>
+                
+                <label for="traits">Traits:</label><br>
+                <textarea id="traits" name="traits"></textarea><br><br>
+                
+                <label for="background">Background:</label><br>
+                <textarea id="background" name="background"></textarea><br><br>
+                
+                <label for="history">History:</label><br>
+                <textarea id="history" name="history"></textarea><br><br>
+                
+                <button type="button" onclick="generateImages()">Create Character</button>
+            </form>
+            
+            <div id="gallery"></div>
+        </div>
+
+    </div>
+
     <script>
+        const socket = io();
+
+        function updateHealth(characterId) {
+            const healthInput = document.getElementById('hpInput');
+            const newHealth = healthInput.value;
+
+            socket.emit('update_health', {
+                character_id: characterId,
+                new_health: newHealth
+            });
+        }
+
+        socket.on('health_updated', function (data) {
+            const healthInput = document.getElementById('hpInput');
+            if (healthInput) {
+                healthInput.value = data.new_health;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const hpInput = document.getElementById('hpInput');
+            hpInput.addEventListener('change', () => {
+                updateHealth('{{ character_id }}');
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelector('.tab.active').classList.remove('active');
+                    tab.classList.add('active');
+
+                    document.querySelector('.tab-content.active').classList.remove('active');
+                    document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+                });
+            });
+
+            // Print the character_id to the console
+            const characterId = '{{ character_id }}';
+            console.log('Character ID:', characterId);
+
+            updateGallery(); // Load gallery on page load
+        });
+
         function togglePanel(panelId) {
             var panel = document.getElementById(panelId);
             panel.classList.toggle("open");
         }
-    </script>
-</head>
 
-<body>
-    <div class="container">
-        <div class="character-details">
-            <h2><i class="fas fa-user"></i> {{ character['name'] }}</h2>
-            <div><label><i class="fas fa-graduation-cap"></i> Class:</label><span>{{ character['class'] }}</span></div>
-            <div><label><i class="fas fa-users"></i> Race:</label><span>{{ character['race'] }}</span></div>
-            <div class="stats-row">
-                <div class="stat-box">
-                    <div class="stat-bonus">{{ character['strength']|modifier }}</div>
-                    <label><i class="fas fa-dumbbell"></i> Strength:</label><span>{{ character['strength'] }}</span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-bonus">{{ character['dexterity']|modifier }}</div>
-                    <label><i class="fas fa-running"></i> Dexterity:</label><span>{{ character['dexterity'] }}</span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-bonus">{{ character['constitution']|modifier }}</div>
-                    <label><i class="fas fa-heartbeat"></i> Constitution:</label><span>{{ character['constitution'] }}</span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-bonus">{{ character['intelligence']|modifier }}</div>
-                    <label><i class="fas fa-brain"></i> Intelligence:</label><span>{{ character['intelligence'] }}</span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-bonus">{{ character['wisdom']|modifier }}</div>
-                    <label><i class="fas fa-eye"></i> Wisdom:</label><span>{{ character['wisdom'] }}</span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-bonus">{{ character['charisma']|modifier }}</div>
-                    <label><i class="fas fa-theater-masks"></i> Charisma:</label><span>{{ character['charisma'] }}</span>
-                </div>
-            </div>
-            <div class="stats-row">
-                <div class="stat-box"><label><i class="fas fa-heart"></i> Hit Points:</label><span>{{ character['hit_points'] }}</span></div>
-                <div class="stat-box"><label><i class="fas fa-shield-alt"></i> Armor Class:</label><span>{{ character['armor_class'] }}</span></div>
-                <div class="stat-box"><label><i class="fas fa-shoe-prints"></i> Speed:</label><span>{{ character['speed'] }}</span></div>
-            </div>
-            <div><label><i class="fas fa-balance-scale"></i> Alignment:</label><span>{{ character['alignment'] }}</span></div>
-            <div><label><i class="fas fa-book-open"></i> Background:</label><span>{{ character['background'] }}</span></div>
+        function uploadImage() {
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
 
-            <div class="skills">
-                <h3><i class="fas fa-book"></i> Skills</h3>
-                <div class="skill-list">
-                    {% for skill, value in skills.items() %}
-                    <div class="skill-box"><label>{{ skill }}:</label><span>{{ value }}</span></div>
-                    {% endfor %}
-                </div>
-            </div>
+            console.log('Form Data Entries:');
+            for (let entry of formData.entries()) {
+                console.log(entry[0] + ': ' + entry[1]);
+            }
 
-            {% if character['class'] in ['Wizard', 'Sorcerer', 'Cleric', 'Druid'] %}
-            <div class="spellbook">
-                <h3 class="toggle-button" onclick="togglePanel('spellbook-panel')"><i class="fas fa-book"></i> Spellbook</h3>
-            </div>
-            {% endif %}
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                if (data.error) {
+                    console.error('Error:', data.error);
+                } else {
+                    updateGallery();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
 
-            <div class="inventory">
-                <h3 class="toggle-button" onclick="togglePanel('inventory-panel')"><i class="fas fa-box"></i> Inventory</h3>
-            </div>
+        function updateGallery() {
+    fetch(`/get-images?characterId={{ character_id }}`)
+        .then(response => response.json())
+        .then(images => {
+            const gallery = document.getElementById('imageGallery');
+            gallery.innerHTML = '';
+            images.forEach(image => {
+                const item = document.createElement('div');
+                item.classList.add('gallery-item');
+                item.innerHTML = `
+                    <img src="${image.url}" alt="${image.type}">
+                    <div>${image.type}</div>
+                    <button onclick="replaceImage('${image.id}')">Replace</button>
+                    <button onclick="removeImage('${image.type}')">Remove</button>
+                `;
+                gallery.appendChild(item);
+            });
+        });
+}
 
-            <div class="extra-details">
-                <h3 class="toggle-button" onclick="togglePanel('extra-details-panel')"><i class="fas fa-info-circle"></i> Extra Details</h3>
-            </div>
-        </div>
+        function replaceImage(imageId) {
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+            formData.append('replaceImageId', imageId);
+            formData.append('characterId', '{{ character_id }}');
+            fetch('/replace', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                updateGallery();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
 
-        <div id="spellbook-panel" class="panel panel-bottom">
-            <span class="close-button" onclick="togglePanel('spellbook-panel')"><i class="fas fa-times"></i></span>
-            <div class="spellbook-content">
-                <h3>Spellbook</h3>
-                <div class="spell">
-                    <h4><i class="fas fa-magic"></i> Fireball</h4>
-                    <p><strong>Level:</strong> 3</p>
-                    <p><strong>Casting Time:</strong> 1 action</p>
-                    <p><strong>Range:</strong> 150 feet</p>
-                    <p><strong>Components:</strong> V, S, M (a tiny ball of bat guano and sulfur)</p>
-                    <p><strong>Duration:</strong> Instantaneous</p>
-                    <p><strong>Description:</strong> A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.</p>
-                </div>
-                <div class="spell">
-                    <h4><i class="fas fa-magic"></i> Magic Missile</h4>
-                    <p><strong>Level:</strong> 1</p>
-                    <p><strong>Casting Time:</strong> 1 action</p>
-                    <p><strong>Range:</strong> 120 feet</p>
-                    <p><strong>Components:</strong> V, S</p>
-                    <p><strong>Duration:</strong> Instantaneous</p>
-                    <p><strong>Description:</strong> You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range.</p>
-                </div>
-            </div>
-        </div>
+        function removeImage(imageType) {
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+            formData.append('imageType', imageType);
+            formData.append('characterId', '{{ character_id }}');
+            fetch('/remove', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                updateGallery();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
 
-        <div id="inventory-panel" class="panel panel-right">
-            <span class="close-button" onclick="togglePanel('inventory-panel')"><i class="fas fa-times"></i></span>
-            <div class="spellbook-content">
-                <h3>Inventory</h3>
-                <div class="item">
-                    <h4><i class="fas fa-sword"></i> Longsword</h4>
-                    <p><strong>Type:</strong> Weapon</p>
-                    <p><strong>Damage:</strong> 1d8 slashing</p>
-                    <p><strong>Weight:</strong> 3 lbs</p>
-                    <p><strong>Description:</strong> A versatile weapon that can be wielded with one or two hands.</p>
-                </div>
-                <div class="item">
-                    <h4><i class="fas fa-shield-alt"></i> Shield</h4>
-                    <p><strong>Type:</strong> Armor</p>
-                    <p><strong>AC Bonus:</strong> +2</p>
-                    <p><strong>Weight:</strong> 6 lbs</p>
-                    <p><strong>Description:</strong> A large shield that provides additional protection in combat.</p>
-                </div>
-            </div>
-        </div>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
 
-        <div id="extra-details-panel" class="panel panel-left">
-            <span class="close-button" onclick="togglePanel('extra-details-panel')"><i class="fas fa-times"></i></span>
-            <div class="spellbook-content">
-                <h3>Extra Details</h3>
-                <div class="detail">
-                    <h4><i class="fas fa-bullseye"></i> Darkvision</h4>
-                    <p><strong>Range:</strong> 60 feet</p>
-                    <p><strong>Description:</strong> You can see in darkness (shades of gray) up to 60 feet.</p>
-                </div>
-                <div class="detail">
-                    <h4><i class="fas fa-feather"></i> Feather Fall</h4>
-                    <p><strong>Casting Time:</strong> 1 reaction</p>
-                    <p><strong>Range:</strong> 60 feet</p>
-                    <p><strong>Description:</strong> Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+        function changeFont() {
+            const fontSelect = document.getElementById('fontSelect');
+            document.body.style.fontFamily = fontSelect.value;
+        }
+
+        function changePrimaryColor() {
+            const primaryColor = document.getElementById('primaryColor').value;
+            document.documentElement.style.setProperty('--primary-color', primaryColor);
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.style.backgroundColor = primaryColor;
+            });
+        }
+        const profiles = {
+            thief: {
+                name: "Shadow",
+                race: "Elf",
+                class: "Thief",
+                age: "120",
+                description: "A nimble and cunning elf with a talent for stealth.",
+                appearance: "Slender build, sharp eyes, always dressed in dark clothing.",
+                traits: "Quick, Agile, Intelligent",
+                background: "Grew up in the dark alleys of the city, learning to pickpocket and sneak.",
+                history: "Shadow has a history of heists and infiltration missions, always managing to slip away unnoticed."
+            },
+            fighter: {
+                name: "Brutus",
+                race: "Human",
+                class: "Fighter",
+                age: "35",
+                description: "A strong and brave warrior with unmatched combat skills.",
+                appearance: "Muscular build, scarred face, always seen in heavy armor.",
+                traits: "Strong, Courageous, Honorable",
+                background: "Raised in a warrior clan, Brutus trained from a young age to become a formidable fighter.",
+                history: "Brutus has fought in numerous battles, earning a reputation as a fearsome and honorable warrior."
+            },
+            artificer: {
+                name: "Tink",
+                race: "Gnome",
+                class: "Artificer",
+                age: "80",
+                description: "A clever gnome with a knack for invention and enchantment.",
+                appearance: "Small stature, wearing goggles and a tool belt, always has a mischievous grin.",
+                traits: "Creative, Ingenious, Resourceful",
+                background: "Grew up in a gnome community known for its inventors and tinkerers.",
+                history: "Tink has created numerous magical gadgets and tools, always pushing the boundaries of what is possible."
+            }
+        };
+
+        function populateForm() {
+            const profile = document.getElementById('profiles').value;
+            if (profiles[profile]) {
+                document.getElementById('name').value = profiles[profile].name;
+                document.getElementById('race').value = profiles[profile].race;
+                document.getElementById('class').value = profiles[profile].class;
+                document.getElementById('age').value = profiles[profile].age;
+                document.getElementById('description').value = profiles[profile].description;
+                document.getElementById('appearance').value = profiles[profile].appearance;
+                document.getElementById('traits').value = profiles[profile].traits;
+                document.getElementById('background').value = profiles[profile].background;
+                document.getElementById('history').value = profiles[profile].history;
+            } else {
+                document.getElementById('characterForm').reset();
+            }
+        }
+
+        function generateImages() {
+    const formData = {
+        name: document.getElementById('name').value,
+        race: document.getElementById('race').value,
+        class: document.getElementById('class').value,
+        age: document.getElementById('age').value,
+        description: document.getElementById('description').value,
+        appearance: document.getElementById('appearance').value,
+        traits: document.getElementById('traits').value,
+        background: document.getElementById('background').value,
+        history: document.getElementById('history').value,
+    };
+
+    fetch('/generate_prompt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        const gallery = document.getElementById('gallery');
+        gallery.innerHTML = '';
+        if (data.images) {
+            data.images.forEach(imageUrl => {
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                gallery.appendChild(img);
+            });
+        } else {
+            const errorMessage = document.createElement('p');
+            errorMessage.textContent = 'Error generating images: ' + data.error;
+            gallery.appendChild(errorMessage);
+        }
+    });
+}
+
+   </script>
 </body>
-
 </html>

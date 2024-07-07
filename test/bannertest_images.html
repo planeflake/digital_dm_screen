@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Character Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: translateY(var(--text-offset, 0px));
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            margin-right: 20px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls div {
+            margin-bottom: 10px;
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            width: 350px;
+            height: 400px;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .character-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            text-align: left;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .character-card .header img {
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .character-card .header h2,
+        h1 {
+            color: red;
+            margin: 0;
+        }
+
+        .character-card .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 10px;
+        }
+
+        .character-card .stats div {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .character-card .stats div i,
+        .character-card .stats div img {
+            margin-right: 5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .character-card .health-bar-container {
+            position: relative;
+            background-color: #d4756b;
+            border: 1px solid #c0392b;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 25px;
+            margin-bottom: 10px;
+        }
+
+        .character-card .health-bar {
+            height: 100%;
+            background-color: #c0392b;
+            position: absolute;
+        }
+
+        .character-card .health-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            left: 0;
+            line-height: 25px;
+            font-size: 14px;
+            color: black;
+        }
+
+        .spell-slots {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        .spell-slots div {
+            display: flex;
+            align-items: left;
+            justify-content: flex-start;
+            margin-bottom: 5px;
+        }
+
+        .spell-slots span {
+            color: black;
+            margin-right: 10px;
+        }
+
+        .spell-slots .slot {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 2px;
+            border-radius: 3px;
+            background-color: white;
+        }
+
+        .spell-slots .slot.available {
+            background-color: black;
+        }
+
+        .spell-slots .slot.used {
+            background-color: red;
+        }
+
+        .character-card .inventory-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .inventory-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(139, 69, 19, 0.8);
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1;
+            overflow: auto;
+            transition: display 0.3s ease;
+        }
+
+        .inventory-panel.open {
+            display: block;
+        }
+
+        .inventory-panel .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .inventory-panel .inventory-item i,
+        .inventory-panel .inventory-item img {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .platinum-coin i {
+            color: #e5e4e2;
+        }
+
+        .gold-coin i {
+            color: #ffd700;
+        }
+
+        .silver-coin i {
+            color: #c0c0c0;
+        }
+
+        .copper-coin i {
+            color: #b87333;
+        }
+
+        .inventory-item-popup {
+            display: none;
+            position: absolute;
+            background-color: white;
+            color: black;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 200px;
+        }
+
+        .inventory-item.show-popup .inventory-item-popup {
+            display: block;
+        }
+
+        .inventory-close {
+            cursor: pointer;
+        }
+
+        .banner {
+            position: absolute;
+            top: 0;
+            right: 10%;
+            background: linear-gradient(135deg, rgba(102, 102, 102, 0.5) 25%, rgba(51, 51, 51, 0.5) 75%), var(--banner-color, #000);
+            color: #fff;
+            padding: 10px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 75%, 50% 100%, 25% 75%, 0 75%);
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: top 0.3s, right 0.3s;
+            z-index: 10;
+        }
+
+        .banner i {
+            margin-right: 5px;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .banner:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: translateY(var(--text-offset, 0px));
+        }
+
+        .rounded {
+            border-radius: 15px;
+        }
+
+        .ribbon {
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+        }
+
+        .flag {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+        }
+
+        .notches {
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 75%, 50% 100%, 25% 75%, 0 75%);
+        }
+
+        .scalloped {
+            clip-path: path('M 0 0 H 100 A 20 20 0 0 1 80 20 H 20 A 20 20 0 0 1 0 0 Z');
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="controls">
+            <div>
+                <label for="player-select">Select Player:</label>
+                <select id="player-select">
+                    <option value="paladin-card">Paladin</option>
+                    <option value="druid-card">Druid</option>
+                    <option value="wizard-card">Wizard</option>
+                </select>
+            </div>
+            <div>
+                <label for="condition-select">Select Condition:</label>
+                <select id="condition-select">
+                    <!-- Negative Conditions -->
+                    <option value="blinded">Blinded</option>
+                    <option value="charmed">Charmed</option>
+                    <option value="deafened">Deafened</option>
+                    <option value="frightened">Frightened</option>
+                    <option value="grappled">Grappled</option>
+                    <option value="incapacitated">Incapacitated</option>
+                    <option value="invisible">Invisible</option>
+                    <option value="paralyzed">Paralyzed</option>
+                    <option value="petrified">Petrified</option>
+                    <option value="poisoned">Poisoned</option>
+                    <option value="prone">Prone</option>
+                    <option value="restrained">Restrained</option>
+                    <option value="stunned">Stunned</option>
+                    <option value="unconscious">Unconscious</option>
+                    <!-- Positive Conditions -->
+                    <option value="blessed">Blessed</option>
+                    <option value="hasted">Hasted</option>
+                    <option value="inspired">Inspired</option>
+                    <option value="shielded">Shielded</option>
+                </select>
+            </div>
+            <button id="add-condition">Add Condition</button>
+        </div>
+        <div id="paladin-card" class="image-container"
+            style="background-image: url('/home/oli/scripts/digital_dm_screen/static/paladin.webp');">
+            <div class="character-card">
+                <div class="character-info">
+                    <div class="character-header">
+                        <h1>Scorge</h1>
+                        <h2>Paladin</h2>
+                        <span>Level 5</span>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-dumbbell"></i><span>Str: 16</span>
+                            <i class="fas fa-running"></i><span>Dex: 10</span>
+                            <i class="fas fa-heartbeat"></i><span>Con: 14</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-brain"></i><span>Int: 8</span>
+                            <i class="fas fa-eye"></i><span>Wis: 12</span>
+                            <i class="fas fa-theater-masks"></i><span>Cha: 18</span>
+                        </div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-shield-alt"></i><span>AC: 18</span>
+                            <i class="fas fa-heart"></i><span>HP: 60</span>
+                            <i class="fas fa-bolt"></i><span>Initiative: +0</span>
+                        </div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-coins"></i><span>Total Gold: 200</span>
+                        </div>
+                    </div>
+                    <div class="health-bar-container">
+                        <div class="health-bar" style="width: 75%;"></div>
+                        <div class="health-text">45/60</div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-eye"></i><span>Passive Perception: 15</span>
+                        </div>
+                    </div>
+                    <div class="spell-slots">
+                        <div>
+                            <span>Level 1</span>
+                            <div class="slot available"></div>
+                            <div class="slot used"></div>
+                        </div>
+                        <div>
+                            <span>Level 2</span>
+                            <div class="slot used"></div>
+                        </div>
+                    </div>
+                    <button class="inventory-button" onclick="toggleInventory(this)"
+                        data-panel-id="paladin-card">Inventory</button>
+                    <div class="inventory-panel">
+                        <div class="inventory-header">
+                            <span class="inventory-close" onclick="toggleInventory(this)"
+                                data-panel-id="paladin-card">&times;</span>
+                        </div>
+                        <div class="inventory-content">
+                            <div class="coins">
+                                <div class="platinum-coin"><i class="fas fa-coins"></i><span>PP: 20</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="gold-coin"><i class="fas fa-coins"></i><span>GP: 150</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="silver-coin"><i class="fas fa-coins"></i><span>SP: 30</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="copper-coin"><i class="fas fa-coins"></i><span>CP: 10</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/skull-shield.svg"
+                                    alt="Shield" style="width: 20px; height: 20px;">
+                                <span>Sword</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                                <div class="inventory-item-popup">
+                                    <h3>Sword</h3>
+                                    <p><strong>Type:</strong> Weapon</p>
+                                    <p><strong>Damage:</strong> 1d8 + 2</p>
+                                    <p><strong>Special:</strong> Can cast Light</p>
+                                </div>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/holy-symbol.svg"
+                                    alt="Holy Symbol" style="width: 20px; height: 20px;">
+                                <span>Shield</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                                <div class="inventory-item-popup">
+                                    <h3>Shield</h3>
+                                    <p><strong>Type:</strong> Armor</p>
+                                    <p><strong>AC Bonus:</strong> +2</p>
+                                    <p><strong>Special:</strong> Reflects magic missiles</p>
+                                </div>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/orb-wand.svg" alt="Wand"
+                                    style="width: 20px; height: 20px;">
+                                <span>Holy Symbol</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                                <div class="inventory-item-popup">
+                                    <h3>Holy Symbol</h3>
+                                    <p><strong>Type:</strong> Magic Item</p>
+                                    <p><strong>Effect:</strong> Boosts healing spells</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="banner-container"></div>
+            </div>
+        </div>
+        <div id="druid-card" class="image-container"
+            style="background-image: url('/home/oli/scripts/digital_dm_screen/static/druid.webp');">
+            <div class="character-card">
+                <div class="character-info">
+                    <div class="character-header">
+                        <h1>Dustbunny</h1>
+                        <h2>Druid</h2>
+                        <span>Level 5</span>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-dumbbell"></i><span>Str: 10</span>
+                            <i class="fas fa-running"></i><span>Dex: 12</span>
+                            <i class="fas fa-heartbeat"></i><span>Con: 14</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-brain"></i><span>Int: 14</span>
+                            <i class="fas fa-eye"></i><span>Wis: 18</span>
+                            <i class="fas fa-theater-masks"></i><span>Cha: 10</span>
+                        </div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-shield-alt"></i><span>AC: 16</span>
+                            <i class="fas fa-heart"></i><span>HP: 40</span>
+                            <i class="fas fa-bolt"></i><span>Initiative: +1</span>
+                        </div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-coins"></i><span>Total Gold: 100</span>
+                        </div>
+                    </div>
+                    <div class="health-bar-container">
+                        <div class="health-bar" style="width: 50%;"></div>
+                        <div class="health-text">20/40</div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-eye"></i><span>Passive Perception: 14</span>
+                        </div>
+                    </div>
+                    <div class="spell-slots">
+                        <div>
+                            <span>Level 1</span>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                            <div class="slot used"></div>
+                            <div class="slot used"></div>
+                        </div>
+                        <div>
+                            <span>Level 2</span>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                            <div class="slot used"></div>
+                        </div>
+                    </div>
+                    <button class="inventory-button" onclick="toggleInventory(this)"
+                        data-panel-id="druid-card">Inventory</button>
+                    <div class="inventory-panel">
+                        <div class="inventory-header">
+                            <span class="inventory-close" onclick="toggleInventory(this)"
+                                data-panel-id="druid-card">&times;</span>
+                        </div>
+                        <div class="inventory-content">
+                            <div class="coins">
+                                <div class="platinum-coin"><i class="fas fa-coins"></i><span>PP: 0</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="gold-coin"><i class="fas fa-coins"></i><span>GP: 250</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="silver-coin"><i class="fas fa-coins"></i><span>SP: 60</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="copper-coin"><i class="fas fa-coins"></i><span>CP: 10</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/skull-shield.svg"
+                                    alt="Shield" style="width: 20px; height: 20px;">
+                                <span>Staff</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/holy-symbol.svg"
+                                    alt="Holy Symbol" style="width: 20px; height: 20px;">
+                                <span>Herbs</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/orb-wand.svg" alt="Wand"
+                                    style="width: 20px; height: 20px;">
+                                <span>Spell Book</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="banner-container"></div>
+            </div>
+        </div>
+        <div id="wizard-card" class="image-container"
+            style="background-image: url('/home/oli/scripts/digital_dm_screen/static/wizard.webp');">
+            <div class="character-card">
+                <div class="character-info">
+                    <div class="character-header">
+                        <h1>Shadow</h1>
+                        <h2>Wizard</h2>
+                        <span>Level 5</span>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-dumbbell"></i><span>Str: 8</span>
+                            <i class="fas fa-running"></i><span>Dex: 14</span>
+                            <i class="fas fa-heartbeat"></i><span>Con: 12</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-brain"></i><span>Int: 18</span>
+                            <i class="fas fa-eye"></i><span>Wis: 10</span>
+                            <i class="fas fa-theater-masks"></i><span>Cha: 12</span>
+                        </div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-shield-alt"></i><span>AC: 14</span>
+                            <i class="fas fa-heart"></i><span>HP: 30</span>
+                            <i class="fas fa-bolt"></i><span>Initiative: +2</span>
+                        </div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-coins"></i><span>Total Gold: 50</span>
+                        </div>
+                    </div>
+                    <div class="health-bar-container">
+                        <div class="health-bar" style="width: 33%;"></div>
+                        <div class="health-text">10/30</div>
+                    </div>
+                    <div class="character-stats">
+                        <div>
+                            <i class="fas fa-eye"></i><span>Passive Perception: 12</span>
+                        </div>
+                    </div>
+                    <div class="spell-slots">
+                        <div>
+                            <span>Level 1</span>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                            <div class="slot used"></div>
+                        </div>
+                        <div>
+                            <span>Level 2</span>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                        </div>
+                        <div>
+                            <span>Level 3</span>
+                            <div class="slot available"></div>
+                            <div class="slot available"></div>
+                        </div>
+                    </div>
+                    <button class="inventory-button" onclick="toggleInventory(this)"
+                        data-panel-id="wizard-card">Inventory</button>
+                    <div class="inventory-panel">
+                        <div class="inventory-header">
+                            <span class="inventory-close" onclick="toggleInventory(this)"
+                                data-panel-id="wizard-card">&times;</span>
+                        </div>
+                        <div class="inventory-content">
+                            <div class="coins">
+                                <div class="platinum-coin"><i class="fas fa-coins"></i><span>PP: 20</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="gold-coin"><i class="fas fa-coins"></i><span>GP: 150</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="silver-coin"><i class="fas fa-coins"></i><span>SP: 30</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                                <div class="copper-coin"><i class="fas fa-coins"></i><span>CP: 10</span><i
+                                        class="fas fa-hand-paper take-icon"></i></div>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/skull-shield.svg"
+                                    alt="Shield" style="width: 20px; height: 20px;">
+                                <span>Wand</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/holy-symbol.svg"
+                                    alt="Holy Symbol" style="width: 20px; height: 20px;">
+                                <span>Spell Book</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                            </div>
+                            <div class="inventory-item">
+                                <img src="file:///home/oli/scripts/digital_dm_screen/static/orb-wand.svg" alt="Wand"
+                                    style="width: 20px; height: 20px;">
+                                <span>Robes</span>
+                                <i class="fas fa-hand-paper take-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="banner-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleInventory(button) {
+            console.log('Button clicked:', button);
+            const panelId = button.getAttribute('data-panel-id');
+            const panel = document.querySelector(`#${panelId} .inventory-panel`);
+
+            console.log('Panel ID:', panelId);
+            console.log('Panel found:', panel);
+            if (panel) {
+                panel.classList.toggle('open');
+                console.log('Panel class list after toggle:', panel.classList);
+            }
+        }
+
+        function updateBackgrounds() {
+            const characters = [
+                {
+                    id: 'paladin-card',
+                    fullHealthImage: '/home/oli/scripts/digital_dm_screen/static/paladin.webp',
+                    injuredImage: '/home/oli/scripts/digital_dm_screen/static/paladin-injured.webp',
+                    badlyInjuredImage: '/home/oli/scripts/digital_dm_screen/static/paladin-badly-injured.webp',
+                    healthPercentage: 75
+                },
+                {
+                    id: 'druid-card',
+                    fullHealthImage: '/home/oli/scripts/digital_dm_screen/static/druid.webp',
+                    injuredImage: '/home/oli/scripts/digital_dm_screen/static/druid-injured.webp',
+                    badlyInjuredImage: '/home/oli/scripts/digital_dm_screen/static/druid-badly-injured.webp',
+                    healthPercentage: 50
+                },
+                {
+                    id: 'wizard-card',
+                    fullHealthImage: '/home/oli/scripts/digital_dm_screen/static/wizard.webp',
+                    injuredImage: '/home/oli/scripts/digital_dm_screen/static/wizard-injured.webp',
+                    badlyInjuredImage: '/home/oli/scripts/digital_dm_screen/static/wizard-badly-injured.webp',
+                    healthPercentage: 80
+                }
+            ];
+
+            characters.forEach(character => {
+                const card = document.getElementById(character.id);
+                let backgroundImage = character.fullHealthImage;
+
+                if (character.healthPercentage < 30) {
+                    backgroundImage = character.badlyInjuredImage;
+                } else if (character.healthPercentage < 60) {
+                    backgroundImage = character.injuredImage;
+                }
+
+                card.style.backgroundImage = `url(${backgroundImage})`;
+            });
+        }
+
+        function addCondition() {
+    const playerSelect = document.getElementById('player-select');
+    const conditionSelect = document.getElementById('condition-select');
+    const bannerWidthRange = 25;
+    const bannerHeightRange = 75;
+    const playerCardId = playerSelect.value;
+    const condition = conditionSelect.value;
+
+    const playerCard = document.getElementById(playerCardId);
+    const bannerContainer = playerCard.querySelector('.banner-container');
+
+    const bannerCount = bannerContainer.querySelectorAll('.banner').length;
+    const topOffset = 0; // Adjust this value as needed for proper offset
+    const rightOffset = 10 + (bannerCount * 5); // Adjust this value as needed for proper offset
+
+    const banner = document.createElement('div');
+    banner.classList.add('banner');
+    banner.style.top = `${topOffset}px`;
+    banner.style.right = `${rightOffset}%`;
+    banner.style.paddingLeft = '30px';
+    banner.style.paddingRight = '30px';
+    banner.style.paddingTop = '55px';
+    banner.style.paddingBottom = '55px';
+
+    let conditionName = '';
+    switch (condition) {
+        case 'blinded':
+            banner.style.setProperty('--banner-color', '#A9A9A9'); // Dark Gray
+            conditionName = 'Blinded';
+            break;
+        case 'charmed':
+            banner.style.setProperty('--banner-color', '#FF69B4'); // Hot Pink
+            conditionName = 'Charmed';
+            break;
+        case 'deafened':
+            banner.style.setProperty('--banner-color', '#A9A9A9'); // Dark Gray
+            conditionName = 'Deafened';
+            break;
+        case 'frightened':
+            banner.style.setProperty('--banner-color', '#FFA500'); // Orange
+            conditionName = 'Frightened';
+            break;
+        case 'grappled':
+            banner.style.setProperty('--banner-color', '#8B4513'); // Saddle Brown
+            conditionName = 'Grappled';
+            break;
+        case 'incapacitated':
+            banner.style.setProperty('--banner-color', '#696969'); // Dim Gray
+            conditionName = 'Incapacitated';
+            break;
+        case 'invisible':
+            banner.style.setProperty('--banner-color', '#808080'); // Gray
+            conditionName = 'Invisible';
+            break;
+        case 'paralyzed':
+            banner.style.setProperty('--banner-color', '#00008B'); // Dark Blue
+            conditionName = 'Paralyzed';
+            break;
+        case 'petrified':
+            banner.style.setProperty('--banner-color', '#708090'); // Slate Gray
+            conditionName = 'Petrified';
+            break;
+        case 'poisoned':
+            banner.style.setProperty('--banner-color', '#228B22'); // Forest Green
+            conditionName = 'Poisoned';
+            break;
+        case 'prone':
+            banner.style.setProperty('--banner-color', '#8B0000'); // Dark Red
+            conditionName = 'Prone';
+            break;
+        case 'restrained':
+            banner.style.setProperty('--banner-color', '#B8860B'); // Dark Golden Rod
+            conditionName = 'Restrained';
+            break;
+        case 'stunned':
+            banner.style.setProperty('--banner-color', '#FFD700'); // Gold
+            conditionName = 'Stunned';
+            break;
+        case 'unconscious':
+            banner.style.setProperty('--banner-color', '#000000'); // Black
+            conditionName = 'Unconscious';
+            break;
+        case 'blessed':
+            banner.style.setProperty('--banner-color', '#FFD700'); // Gold
+            conditionName = 'Blessed';
+            break;
+        case 'hasted':
+            banner.style.setProperty('--banner-color', '#00FF00'); // Lime
+            conditionName = 'Hasted';
+            break;
+        case 'inspired':
+            banner.style.setProperty('--banner-color', '#FF4500'); // Orange Red
+            conditionName = 'Inspired';
+            break;
+        case 'shielded':
+            banner.style.setProperty('--banner-color', '#1E90FF'); // Dodger Blue
+            conditionName = 'Shielded';
+            break;
+        // Add more conditions as needed
+        default:
+            console.log('Unknown condition:', condition);
+    }
+
+    banner.innerHTML = `<span class="vertical-text">${conditionName}</span>`;
+
+    // Add mouseover and mouseout event listeners to adjust z-index
+    banner.addEventListener('mouseover', () => {
+        banner.style.zIndex = '1000';
+    });
+
+    banner.addEventListener('mouseout', () => {
+        banner.style.zIndex = 'auto';
+    });
+
+    bannerContainer.appendChild(banner);
+}
+
+document.addEventListener('DOMContentLoaded', updateBackgrounds);
+document.getElementById('add-condition').addEventListener('click', addCondition);
+</script>
+</body>
+
+</html>

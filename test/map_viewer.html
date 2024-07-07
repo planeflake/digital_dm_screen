@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Tagger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+        }
+        input[type="file"], select {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #map-container {
+            position: relative;
+            margin-top: 20px;
+        }
+        #map {
+            width: 100%;
+            max-width: 100%;
+            border: 1px solid #ccc;
+        }
+        .tag {
+            position: absolute;
+            background-color: red;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        .popup input[type="text"], .popup select {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .popup button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .popup button:hover {
+            background-color: #218838;
+        }
+        .tag-location {
+            background-color: blue;
+        }
+        .tag-point {
+            background-color: green;
+        }
+        .fullscreen-button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .fullscreen-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Map Tagger</h1>
+        <form>
+            <label for="map-select">Select Map</label>
+            <select id="map-select" onchange="loadPreUploadedMap(event)">
+                <option value="" selected disabled>Select a map</option>
+                <option value="map1.jpg">Map 1</option>
+                <option value="map2.jpg">Map 2</option>
+                <option value="map3.jpg">Map 3</option>
+            </select>
+        </form>
+        <div id="map-container">
+            <img id="map" src="" alt="Map Image" onclick="openPopup(event)">
+        </div>
+        <div id="info">
+            Click on the map to add tags.
+        </div>
+        <button class="fullscreen-button" onclick="openFullscreen()">View Fullscreen</button>
+    </div>
+
+    <div id="popup" class="popup">
+        <label for="tag-type">Tag Type</label>
+        <select id="tag-type">
+            <option value="location">Location</option>
+            <option value="point">Point of Interest</option>
+        </select>
+        <label for="tag-label">Tag Label</label>
+        <input type="text" id="tag-label">
+        <button onclick="addTag()">Add Tag</button>
+    </div>
+
+    <div id="tag-popup" class="popup">
+        <p id="tag-info"></p>
+        <button onclick="closeTagPopup()">Close</button>
+    </div>
+
+    <script>
+        let currentX, currentY, currentTag;
+
+        function loadPreUploadedMap(event) {
+            const map = document.getElementById('map');
+            map.src = event.target.value;
+        }
+
+        function openPopup(event) {
+            currentX = event.offsetX;
+            currentY = event.offsetY;
+            const popup = document.getElementById('popup');
+            popup.style.display = 'block';
+        }
+
+        function addTag() {
+            const mapContainer = document.getElementById('map-container');
+            const type = document.getElementById('tag-type').value;
+            const label = document.getElementById('tag-label').value;
+
+            const tag = document.createElement('div');
+            tag.className = 'tag tag-' + type;
+            tag.style.left = `${currentX}px`;
+            tag.style.top = `${currentY}px`;
+            tag.innerText = label[0].toUpperCase(); // Display the first letter of the label
+
+            tag.title = label; // Tooltip showing the full label
+
+            tag.addEventListener('click', () => showTagInfo(tag, label));
+            tag.addEventListener('mousedown', (event) => startHold(event, tag));
+            tag.addEventListener('mouseup', (event) => clearHold(event));
+
+            mapContainer.appendChild(tag);
+
+            const popup = document.getElementById('popup');
+            popup.style.display = 'none';
+        }
+
+        function showTagInfo(tag, label) {
+            const tagPopup = document.getElementById('tag-popup');
+            const tagInfo = document.getElementById('tag-info');
+            tagInfo.innerText = `Tag Label: ${label}\nTag Type: ${tag.classList.contains('tag-location') ? 'Location' : 'Point of Interest'}`;
+            tagPopup.style.display = 'block';
+            currentTag = tag;
+        }
+
+        function closeTagPopup() {
+            const tagPopup = document.getElementById('tag-popup');
+            tagPopup.style.display = 'none';
+        }
+
+        let holdTimeout;
+
+        function startHold(event, tag) {
+            event.preventDefault();
+            holdTimeout = setTimeout(() => changeTagType(tag), 1000); // 1 second hold
+        }
+
+        function clearHold(event) {
+            clearTimeout(holdTimeout);
+        }
+
+        function changeTagType(tag) {
+            const newType = tag.classList.contains('tag-location') ? 'point' : 'location';
+            tag.classList.toggle('tag-location');
+            tag.classList.toggle('tag-point');
+        }
+
+        function openFullscreen() {
+            const fullscreenWindow = window.open('', '', 'width=1920,height=1080');
+            fullscreenWindow.document.write(`
+                <html>
+                <head>
+                    <title>Fullscreen Map</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            overflow: hidden;
+                        }
+                        #fullscreen-map-container {
+                            position: relative;
+                            width: 100vw;
+                            height: 100vh;
+                        }
+                        #fullscreen-map {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: contain;
+                        }
+                        .tag {
+                            position: absolute;
+                            background-color: red;
+                            border-radius: 50%;
+                            width: 20px;
+                            height: 20px;
+                            transform: translate(-50%, -100%);
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            color: white;
+                            font-size: 12px;
+                            font-weight: bold;
+                        }
+                        .tag-location {
+                            background-color: blue;
+                        }
+                        .tag-point {
+                            background-color: green;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div id="fullscreen-map-container">
+                        ${document.getElementById('map-container').innerHTML}
+                    </div>
+                </body>
+                </html>
+            `);
+            fullscreenWindow.document.close();
+            fullscreenWindow.focus();
+
+            // Move the new window to the second monitor
+            const secondMonitorX = 1920; // Adjust this value based on your second monitor's starting X coordinate
+            fullscreenWindow.moveTo(secondMonitorX, 0);
+            fullscreenWindow.resizeTo(screen.availWidth, screen.availHeight);
+
+            // Request fullscreen mode
+            fullscreenWindow.document.documentElement.requestFullscreen().catch(err => {
+                alert(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+            });
+        }
+    </script>
+</body>
+</html>

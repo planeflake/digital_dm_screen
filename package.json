@@ -1,0 +1,24 @@
+{
+  "name": "digital_dm_screen",
+  "version": "1.0.0",
+  "description": "This project is a digital player screen for Dungeons & Dragons, allowing players to manage their characters and access game information in an interactive way. The application is built using Flask and Neo4j, providing a web-based interface for players and dungeon masters.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/planeflake/digital_dm_screen.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/planeflake/digital_dm_screen/issues"
+  },
+  "homepage": "https://github.com/planeflake/digital_dm_screen#readme",
+  "dependencies": {
+    "dgram": "^1.0.1",
+    "express": "^4.19.2"
+  }
+}

@@ -1,10 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, render_template, send_from_directory
 from flask_socketio import SocketIO, emit
 from neo4j import GraphDatabase
 import time
+import os
+import json
+import openai
+from openai import OpenAI
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
+client = OpenAI(api_key='sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV')
 
 # Neo4j connection
 uri = 'neo4j+s://b29956d6.databases.neo4j.io'
@@ -19,12 +25,66 @@ players_list = [
     {'username': 'dm'}
 ]
 
-# Jinja2 filter for calculating ability modifiers
-@app.template_filter('modifier')
-def modifier_filter(score):
-    return (score - 10) // 2
+characters = [
+    {"id": 1, "name": "Character 1", "hit_points": 100},
+    {"id": 2, "name": "Character 2", "hit_points": 90}
+]
+OPENAI_API_KEY = 'sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV'
+client = OpenAI(api_key='sk-proj-Q5VGsmJS7jqRpQcP8RMyT3BlbkFJ0NSba6l51tEIWUrtUbuV')
 
-app.jinja_env.filters['modifier'] = modifier_filter
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'src/images')
+JSON_FILE = os.path.join(BASE_DIR, 'src/images.json')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def startup():
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+
+    if not os.path.exists(JSON_FILE):
+        with open(JSON_FILE, 'w') as file:
+            json.dump({}, file)
+
+startup()
+
+def read_json():
+    with open(JSON_FILE, 'r') as file:
+        return json.load(file)
+
+def write_json(data):
+    with open(JSON_FILE, 'w') as file:
+        json.dump(data, file, indent=4)
+
+@app.route('/generate_prompt', methods=['POST'])
+def generate_prompt(data):
+    chat_input = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": f"Create a detailed description for an image generation prompt based on the following hero details. Do not use the word 'character', use 'hero' instead: {json.dumps(data)}"}
+    ]
+
+    try:
+        chat_response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=chat_input
+        )
+        detailed_prompt = chat_response.choices[0].message.content
+        return detailed_prompt
+    except Exception as e:
+        print(f"Error generating detailed prompt: {e}")
+        return None
+
+@app.route('/generate_images', methods=['POST'])
+def generate_images(prompt):
+    try:
+        response = client.images.generate(model="dall-e-3",
+        prompt=prompt,
+        size="1024x1024",
+        n=1)
+        image_url = response.data[0].url
+        return image_url
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        return None
 
 def get_characters_for_player(username):
     with driver.session() as session:
@@ -53,7 +113,7 @@ def get_characters_for_testing():
                    c.level AS level, c.strength AS strength, c.dexterity AS dexterity, 
                    c.constitution AS constitution, c.intelligence AS intelligence,
                    c.wisdom AS wisdom, c.charisma AS charisma, c.token_url AS tokenUrl, 
-                   ac.ac AS ac, cr.cr AS cr, type.type AS type
+                   ac.ac AS ac, cr.cr AS cr, type.type AS type, c.hit_points as hp
             """
         )
         characters = []
@@ -73,7 +133,8 @@ def get_characters_for_testing():
                 "tokenUrl": record["tokenUrl"],
                 "ac": record["ac"],
                 "cr": record["cr"],
-                "type": record["type"]
+                "type": record["type"],
+                "hp": record['hp']
             })
         return characters
 
@@ -135,6 +196,110 @@ def get_five_monsters():
             })
         return monsters
 
+def get_all_players():
+    with driver.session() as session:
+        result = session.run("MATCH (p:Player) RETURN p.username AS username")
+        players = [{"username": record["username"]} for record in result]
+    return players
+
+def get_all_monsters():
+    with driver.session() as session:
+        result = session.run("MATCH (m:Monster) RETURN m.name AS name, m.hp_average AS hp, m.dex AS dex, m.con AS con, m.int AS int, m.wis AS wis, m.cha AS cha, m.page AS page")
+        monsters = [{"name": record["name"], "hp": record["hp"], "dex": record["dex"], "con": record["con"], "int": record["int"], "wis": record["wis"], "cha": record["cha"], "page": record["page"]} for record in result]
+    return monsters
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    try:
+        if 'imageUpload' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+        file = request.files['imageUpload']
+        image_type = request.form.get('imageType')
+        character_id = request.form.get('characterId')
+
+        if not character_id:
+            return jsonify({'error': 'No character ID provided'}), 400
+
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        if file:
+            data = read_json()
+            if character_id not in data:
+                data[character_id] = {}
+            if image_type in data[character_id]:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], data[character_id][image_type]['filename'])
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+            directory = os.path.join(app.config['UPLOAD_FOLDER'], character_id)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            
+            filename = f"{image_type}.jpg"
+            filepath = os.path.join(directory, filename)
+            file.save(filepath)
+            
+            data[character_id][image_type] = {
+                'filename': filepath,
+                'url': f'/images/{character_id}/{filename}'
+            }
+            write_json(data)
+            
+            return jsonify({'success': 'File uploaded successfully', 'url': f'/images/{character_id}/{filename}'}), 200
+    except Exception as e:
+        app.logger.error(f"Error uploading file: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get-images', methods=['GET'])
+def get_images():
+    character_id = request.args.get('characterId')
+    data = read_json()
+    if character_id in data:
+        images = [{'url': data[character_id][key]['url'], 'type': key, 'id': key} for key in data[character_id]]
+        return jsonify(images), 200
+    return jsonify([]), 200
+
+@app.route('/images/<character_id>/<filename>')
+def uploaded_file(character_id, filename):
+    return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], character_id), filename)
+
+@app.route('/replace', methods=['POST'])
+def replace_file():
+    file = request.files['imageUpload']
+    replace_image_id = request.form.get('replaceImageId')
+    if file:
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], replace_image_id))
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], replace_image_id))
+        return jsonify({'success': 'File replaced successfully', 'url': f'/images/{replace_image_id}'}), 200
+
+@app.route('/remove', methods=['POST'])
+def remove_file():
+    image_type = request.form.get('imageType')
+    character_id = request.form.get('characterId')
+    data = read_json()
+    if character_id in data and image_type in data[character_id]:
+        filepath = data[character_id][image_type]['filename']
+        os.remove(filepath)
+        del data[character_id][image_type]
+        write_json(data)
+        return jsonify({'success': 'File removed successfully'}), 200
+    return jsonify({'error': 'Image or Character not found'}), 404
+
+
+@socketio.on('update_health')
+def handle_update_health(data):
+    character_id = data['character_id']
+    new_health = data['new_health']
+
+    with driver.session() as session:
+        session.run(
+            "MATCH (c:Character) WHERE id(c) = $character_id "
+            "SET c.health = $new_health",
+            character_id=character_id, new_health=new_health
+        )
+
+    emit('health_updated', {'character_id': character_id, 'new_health': new_health}, broadcast=True)
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -152,6 +317,7 @@ def load_character(character_id):
 def login():
     username = request.form['username']
     if any(player['username'] == username for player in players_list):
+        session['username'] = username
         if username == 'dm':
             return redirect(url_for('dm_dashboard', username=username))
         return redirect(url_for('player_dashboard', username=username))
@@ -185,6 +351,7 @@ def player_dashboard(username):
         pass
 
     return render_template('player_dashboard.html', player_data=player_data, characters=characters)
+
 @app.route('/create_character', methods=['GET', 'POST'])
 def create_character():
     if request.method == 'POST':
@@ -324,7 +491,7 @@ def dm_dashboard(username):
 def character_dashboard(character_id):
     character = get_character_details(character_id)
     skills = calculate_skills(character)
-    return render_template('character_dashboard.html', character=character, skills=skills)
+    return render_template('character_dashboard.html', character=character, skills=skills,character_id=character_id)
 
 def calculate_skills(character):
     return {
@@ -370,17 +537,19 @@ def get_monsters():
         monsters = [{"name": record["name"], "image": record["image"], "hp": record["hp"], "ac": record["ac"]} for record in result]
     return jsonify(monsters)
 
-def get_all_players():
-    with driver.session() as session:
-        result = session.run("MATCH (p:Player) RETURN p.username AS username")
-        players = [{"username": record["username"]} for record in result]
-    return players
+@app.template_filter('modifier')
+def modifier_filter(score):
+    return (score - 10) // 2
 
-def get_all_monsters():
-    with driver.session() as session:
-        result = session.run("MATCH (m:Monster) RETURN m.name AS name, m.hp_average AS hp, m.dex AS dex, m.con AS con, m.int AS int, m.wis AS wis, m.cha AS cha, m.page AS page")
-        monsters = [{"name": record["name"], "hp": record["hp"], "dex": record["dex"], "con": record["con"], "int": record["int"], "wis": record["wis"], "cha": record["cha"], "page": record["page"]} for record in result]
-    return monsters
+app.jinja_env.filters['modifier'] = modifier_filter
+@app.route('/images')
+def index():
+    images = [f for f in os.listdir(IMAGES_FOLDER) if f.endswith('.webp')]
+    return render_template('images.html', images=images)
+
+@app.route('/static/<filename>')
+def send_image(filename):
+    return send_from_directory(IMAGES_FOLDER, filename)
 
 @app.route('/players')
 def players():
@@ -392,5 +561,22 @@ def monsters():
     monsters = get_all_monsters()
     return jsonify(monsters)
 
+@app.route('/update_hp', methods=['POST'])
+def update_hp():
+    data = request.json
+    character_id = data.get('character_id')
+    new_hp = data.get('hp')
+
+    # Update the character's HP in the database (dummy update for demonstration)
+    for char in characters:
+        if char['id'] == character_id:
+            char['hit_points'] = new_hp
+            break
+
+    # Emit the update to all connected clients
+    socketio.emit('health_updated', {'character_id': character_id, 'new_health': new_hp})
+
+    return jsonify({'status': 'success', 'new_hp': new_hp})
+
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True)
