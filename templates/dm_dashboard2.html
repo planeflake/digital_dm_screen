@@ -45,8 +45,8 @@
             position: relative;
             display: inline-block;
             margin: 10px;
-            width: 350px;
-            height: 400px;
+            width: 450px;
+            height: 550px;
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
@@ -357,11 +357,11 @@
         <div id="character-cards">
             {% for character in characters %}
             <div id="{{ character.id }}-card" class="image-container"
-                style="background-image: url('src/images/{{ character.id }}/uninjured.png');">
+                style="background-image: url('src/images/{{ character.id }}/uninjured.jpg');">
                 <div class="character-card">
                     <div class="character-info">
                         <div class="character-header">
-                            <h1>{{ character.name }}</h1>
+                            <h1>{{ character.name }} - {{ character.id}}</h1>
                             <h2>{{ character.class }}</h2>
                             <span>Level {{ character.level }}</span>
                         </div>
@@ -473,12 +473,11 @@
                 const maxHp = parseInt(card.querySelector('.health-text').textContent.split('/')[1], 10);
                 const healthPercentage = (hp / maxHp) * 100;
 
-                let backgroundImage = `src/images/${characterId}/uninjured.png`;
-
+                let backgroundImage = `/static/${characterId}/uninjured.jpg`;
                 if (healthPercentage < 30) {
-                    backgroundImage = `src/images/${characterId}/badly-injured.png`;
+                    backgroundImage = `/static/${characterId}/badly-injured.jpg`;
                 } else if (healthPercentage < 60) {
-                    backgroundImage = `src/images/${characterId}/injured.png`;
+                    backgroundImage = `/static/${characterId}/injured.webp`;
                 }
 
                 card.style.backgroundImage = `url(${backgroundImage})`;
@@ -597,7 +596,45 @@
                 banner.style.zIndex = 'auto';
             });
 
+            // Add event listeners for dragging
+            banner.addEventListener('mousedown', startDrag);
+            banner.addEventListener('touchstart', startDrag);
+
             bannerContainer.appendChild(banner);
+        }
+
+        function startDrag(event) {
+            const banner = event.target.closest('.banner');
+            const bannerContainer = banner.parentElement;
+
+            let startX = event.clientX || event.touches[0].clientX;
+            let startY = event.clientY || event.touches[0].clientY;
+
+            let startRight = parseFloat(banner.style.right);
+            let startTop = parseFloat(banner.style.top);
+
+            function onDrag(e) {
+                let currentX = e.clientX || e.touches[0].clientX;
+                let currentY = e.clientY || e.touches[0].clientY;
+
+                let dx = currentX - startX;
+                let dy = currentY - startY;
+
+                banner.style.right = `${startRight - (dx / bannerContainer.offsetWidth) * 100}%`;
+                banner.style.top = `${startTop + dy}px`;
+            }
+
+            function onStopDrag() {
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', onStopDrag);
+                document.removeEventListener('touchmove', onDrag);
+                document.removeEventListener('touchend', onStopDrag);
+            }
+
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onStopDrag);
+            document.addEventListener('touchmove', onDrag);
+            document.addEventListener('touchend', onStopDrag);
         }
 
         document.addEventListener('DOMContentLoaded', updateBackgrounds);

@@ -134,9 +134,17 @@ def get_characters_for_dm():
                 "cr": record["cr"],
                 "type": record["type"],
                 "hp": record['hp'],
-                "max_hp": record['hp']
+                "max_hp": record['hp'],
+                "spell_slots" : 3,
+                "spell_slots_used" : 2
             })
         return characters
+
+def cast_a_spell(character_id,spell_id):
+    print('Character with ID:' & character_id & 'Casting a spell' & spell_id)
+    data = os.open('./src/slots.json')
+    slots = json.load(data)
+    return slots
 
 def get_character_details(character_id):
     with driver.session() as session:
